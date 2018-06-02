@@ -26,6 +26,8 @@ public class ADCMonitorService extends Service {
     AlarmManager am;
     PendingIntent pendingIntent;
 
+    private boolean checkmoving = false;
+
     private PowerManager.WakeLock wakeLock;
     private CountDownTimer timer;
 
@@ -120,7 +122,7 @@ public class ADCMonitorService extends Service {
 
         if(moving) {
             if(stateList.get(stateList.size()-1) == STAY) { // 현재가 Walk엿는데 이전에 Stay 엿으면 현재가 잘못될 수도 있으니 재검사
-                boolean result = accelMonitor.isMoving(); // 움직였는지 안움직였는지 다시 검사한다.
+                boolean result = checking(); // 움직였는지 안움직였는지 다시 검사한다.
                 if(result == WALK) { // 진짜 움직였으면 O X O X 상황
                     if(accStay >= 50) {
                         nowDate = getTime();
@@ -151,7 +153,7 @@ public class ADCMonitorService extends Service {
         }
         else { // 안움직였으면
             if(stateList.get(stateList.size()-1) == WALK) { // 현재가 Stay엿는데 이전에 Walk 엿으면 재검사
-                boolean result = accelMonitor.isMoving();
+                boolean result = checking();
                 if(result == STAY) { // 진짜 Stay이면 O X O X 상황
                     // 이전에 (1분이상 넘겼는지 확인 후) accWalk을 저장해야한다.
                     if(accWalk >= 10 ) {
@@ -288,5 +290,29 @@ public class ADCMonitorService extends Service {
 
         // 지정한 포맷으로 날짜데이터를 string으로 변환하여 반환
         return mFormat.format(mDate);
+    }
+
+    public boolean checking() {
+        accelMonitor = new StepMonitor(this);
+        accelMonitor.onStart();
+
+        timer = new CountDownTimer(activeTime, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+            }
+            @Override
+            public void onFinish() {
+                // 이 함수는 onReceive가 끝나고 1초 뒤에 실행한다.
+
+                Log.d(LOGTAG, "1-second accel data collected!!");
+                // stop the accel data update
+                accelMonitor.onStop();
+
+                // 움직임 여부에 따라 다음 alarm 설정
+                checkmoving = accelMonitor.isMoving();
+            }
+        };
+        timer.start(); // 타이머를 가동한다.
+        return checkmoving;
     }
 }
