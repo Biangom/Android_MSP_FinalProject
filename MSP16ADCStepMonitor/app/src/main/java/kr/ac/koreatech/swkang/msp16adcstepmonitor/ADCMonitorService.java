@@ -56,6 +56,7 @@ public class ADCMonitorService extends Service {
     // 이전 날짜값, 현재 날짜값
     String preDate, nowDate;
 
+    final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
 
     // Alarm 시간이 되었을 때 안드로이드 시스템이 전송해주는 broadcast를 받을 receiver 정의
     // 움직임 여부에 따라 기준에 맞게 다음 alarm이 발생하도록 설정한다.
