@@ -32,7 +32,7 @@ public class ADCMonitorService extends Service {
     private CountDownTimer timer;
 
     private StepMonitor accelMonitor;
-    private long period = 10000; // 기본 10초로 생각
+    private long period = 6000; // 기본 10초로 생각
     private static final long activeTime = 1000;
     private static final long periodForMoving = 30000; // 기본 30초
     private static final long periodIncrement = 5000; // 원래 5초였음
@@ -123,11 +123,11 @@ public class ADCMonitorService extends Service {
 
         if(moving) {
             if(stateList.get(stateList.size()-1) == STAY) { // 현재가 Walk엿는데 이전에 Stay 엿으면 현재가 잘못될 수도 있으니 재검사
-                boolean result = checking(); // 움직였는지 안움직였는지 다시 검사한다.
+                boolean result = accelMonitor.isMoving(); // 움직였는지 안움직였는지 다시 검사한다.
                 if(result == WALK) { // 진짜 움직였으면 O X O X 상황
                     if(accStay >= 50) {
                         nowDate = getTime();
-                        tm.save(preDate + "~" + nowDate + " " + accStay / 10 + "분 " + "정지");
+                        tm.save(preDate + "~" + nowDate + " " + accStay / 10 + "분 " + "정지\n");
                     }
                     accStay = 0;
                     preDate = getTime();
@@ -154,12 +154,12 @@ public class ADCMonitorService extends Service {
         }
         else { // 안움직였으면
             if(stateList.get(stateList.size()-1) == WALK) { // 현재가 Stay엿는데 이전에 Walk 엿으면 재검사
-                boolean result = checking();
+                boolean result = accelMonitor.isMoving();
                 if(result == STAY) { // 진짜 Stay이면 O X O X 상황
                     // 이전에 (1분이상 넘겼는지 확인 후) accWalk을 저장해야한다.
                     if(accWalk >= 10 ) {
                         nowDate = getTime();
-                        tm.save(preDate + "~" + nowDate + " " + accWalk / 10 + "분 " + "이동");
+                        tm.save(preDate + "~" + nowDate + " " + accWalk / 10 + "분 " + "이동\n");
                     }
                     accWalk = 0;
                     preDate = getTime();

@@ -1,9 +1,13 @@
 package kr.ac.koreatech.swkang.msp16adcstepmonitor;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -21,7 +25,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView logText;
     private double rms;
 
-    final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
+    final int MY_PERMISSIONS_REQUEST = 1;
+    boolean isPermitted = false;
 
     // 파일 매니저 관련 설정
     TextFileManager mFileMgr;
@@ -58,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
         //mAccelY = (TextView)findViewById(R.id.accelY);
         //mAccelZ = (TextView)findViewById(R.id.accelZ);
 
+        requestRuntimePermission();
+
         rmsText = (TextView)findViewById(R.id.rms);
         movingText = (TextView)findViewById(R.id.moving);
         logText = (TextView)findViewById(R.id.logView);
@@ -67,6 +74,13 @@ public class MainActivity extends AppCompatActivity {
         intentFilter.addAction("kr.ac.koreatech.msp.adcstepmonitor.rms");
         intentFilter.addAction("kr.ac.koreatech.msp.adcstepmonitor.moving");
         registerReceiver(MyStepReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // timertask를 시작한다.
+        startTimerTask();
     }
 
     @Override
@@ -109,8 +123,8 @@ public class MainActivity extends AppCompatActivity {
         };
 
         // TimerTask를 Timer를 통해 실행시킨다
-        // 4초 후에 타이머를 구동하고 10초마다 반복한다
-        timer.schedule(timerTask, 4000, 10000);
+        // 4초 후에 타이머를 구동하고 5초마다 반복한다
+        timer.schedule(timerTask, 4000, 5000);
         //*** Timer 클래스 메소드 이용법 참고 ***//
         // 	schedule(TimerTask task, long delay, long period)
         // http://developer.android.com/intl/ko/reference/java/util/Timer.html
@@ -124,4 +138,52 @@ public class MainActivity extends AppCompatActivity {
             timerTask = null;
         }
     }
+
+    private void requestRuntimePermission() {
+        //*******************************************************************
+        // Runtime permission check
+        //*******************************************************************
+        if(ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
+                + ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if(ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    || ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST);
+            }
+        } else {
+            // Permission granted
+            isPermitted = true;
+        }
+    } // requestRuntimePermission()
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch(requestCode) {
+            case MY_PERMISSIONS_REQUEST: {
+                // If request is cancelled, the result arrays are empty.
+                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                        && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+
+                    // ACCESS_FINE_LOCATION, WRITE_EXTERNAL_STORAGE 권한을 얻음
+                    isPermitted = true;
+                } else {
+
+                    // 권한을 얻지 못하였으므로 요청 작업을 수행할 수 없음
+                    isPermitted = false;
+                }
+                return;
+            }
+        }
+    } // onRequestPermissionsResult()
 }
