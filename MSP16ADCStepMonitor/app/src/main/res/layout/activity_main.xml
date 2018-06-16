@@ -16,6 +16,13 @@
         android:id="@+id/stopMonitor"
         android:text="Stop Monitoring"
         android:onClick="onClick"/>
+
+    <TextView
+        android:id="@+id/info"
+        android:layout_width="match_parent"
+        android:layout_height="83dp"
+        android:text="empty" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -52,5 +59,6 @@
         android:id="@+id/logView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="ghj" />
+        android:text="empty" />
+
 </LinearLayout>

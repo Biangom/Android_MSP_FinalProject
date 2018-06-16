@@ -23,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView rmsText;
     private TextView movingText;
     private TextView logText;
+
+    private TextView infoText;
     private double rms;
 
     final int MY_PERMISSIONS_REQUEST = 1;
@@ -30,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     // 파일 매니저 관련 설정
     TextFileManager mFileMgr;
+    TextFileManager2 mTestMgr;
 
     // 주기적으로 함수를 실행하기 위한
     // TimerTask 관련 설정
@@ -65,9 +68,14 @@ public class MainActivity extends AppCompatActivity {
 
         requestRuntimePermission();
 
+        mFileMgr = new TextFileManager();
+        mTestMgr = new TextFileManager2();
+
         rmsText = (TextView)findViewById(R.id.rms);
         movingText = (TextView)findViewById(R.id.moving);
         logText = (TextView)findViewById(R.id.logView);
+
+        infoText = (TextView)findViewById(R.id.info);
 
 
         IntentFilter intentFilter = new IntentFilter();
@@ -80,7 +88,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // timertask를 시작한다.
+        logText.setText(mFileMgr.load());
+        infoText.setText(mTestMgr.load());
         startTimerTask();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopTimerTask();
     }
 
     @Override
@@ -115,6 +131,9 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             String data = mFileMgr.load();
                             logText.setText(data);
+                            String data2 = mTestMgr.load();
+                            infoText.setText(data2);
+
                         }catch (NullPointerException e){
                         }
                     }
@@ -124,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
 
         // TimerTask를 Timer를 통해 실행시킨다
         // 4초 후에 타이머를 구동하고 5초마다 반복한다
-        timer.schedule(timerTask, 4000, 5000);
+        timer.schedule(timerTask, 2000, 3000);
         //*** Timer 클래스 메소드 이용법 참고 ***//
         // 	schedule(TimerTask task, long delay, long period)
         // http://developer.android.com/intl/ko/reference/java/util/Timer.html

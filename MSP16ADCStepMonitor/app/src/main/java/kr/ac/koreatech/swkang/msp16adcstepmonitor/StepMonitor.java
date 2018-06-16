@@ -38,7 +38,7 @@ public class StepMonitor implements SensorEventListener {
         // SensorEventListener 등록
         if (mLinear != null) {
             Log.d(LOGTAG, "Register Accel Listener!");
-            mSensorManager.registerListener(this, mLinear, SensorManager.SENSOR_DELAY_GAME);
+            mSensorManager.registerListener(this, mLinear, SensorManager.SENSOR_DELAY_GAME); // 속도를 DELAY_GAME
         }
         // 변수 초기화
         isMoving = false;
@@ -72,6 +72,7 @@ public class StepMonitor implements SensorEventListener {
             float[] values = event.values.clone();
 
             // movement detection
+            // onSensorChange에서 움직임을 감지한다.
             detectMovement(values);
         }
     }
