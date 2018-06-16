@@ -8,6 +8,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiManager;
+import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -19,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 public class ADCMonitorService extends Service {
@@ -32,7 +39,7 @@ public class ADCMonitorService extends Service {
     private CountDownTimer timer;
 
     private StepMonitor accelMonitor;
-    private long period = 8000; // 기본 10초로 생각, 이 부분을 30초로 바꾸어야함.
+    private long period = 4000; // 기본 10초로 생각, 이 부분을 30초로 바꾸어야함.
     private static final long activeTime = 1000;
     private static final long periodForMoving = 30000; // 기본 30초
     private static final long periodIncrement = 5000; // 원래 5초였음
@@ -51,7 +58,7 @@ public class ADCMonitorService extends Service {
     // 1분이상 걸었으면 WALK
     // 5분이상 쉬었으면 STAY
     // 둘 중 아무것도 아니면 UN
-    int state = STAY; // 처음엔 stay로 생각, 현재 상태를 담는다(WALK or STAY)
+    int state = UN; // 처음엔 stay로 생각, 현재 상태를 담는다(WALK or STAY)
 
     ArrayList<Integer> stateList = new ArrayList<Integer>();
     Boolean[] stateListTwo = new Boolean[10];
@@ -69,6 +76,133 @@ public class ADCMonitorService extends Service {
     String preDate, nowDate;
 
 
+    //************************************************************************
+    // 여기부터 Location find 수정 2018.06.16
+    //************************************************************************
+    // Location find 추가
+    WifiManager wifiManager;
+    LocationManager locationManager;
+    List<ScanResult> scanResultList;
+    String location;
+    int locationCount = 0;
+    double latitude, longitude;
+
+
+    BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction().equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
+                getWifiInfo();
+            }
+        }
+    };
+
+    public void getWifiInfo() {
+        Log.d("Location", "getWifiInfo");
+        scanResultList = wifiManager.getScanResults();
+
+        int is_401 = 0;
+        boolean is_401_bool = true;
+
+        // 401 근거리의 와이파이를 등록
+        // 일정 범위 레벨의 와이파이 신호가 잡히면 해당 is_401++
+        // is_401_bool 조건을 추가하여
+        // 와이파이 중심에서 거리는 같지만 방향이 다른 위치를 배제
+        // 조건1 - SSID: cse2.4G  BSSID: 64:e5:99:db:05:c8
+        // 조건2 - SSID: (null)   BSSID: 18:80:90:c6:7b:22
+        // 조건3 - SSID: KUTAP_N  BSSID: 18:80:90:c6:7b:21
+        // 조건4 - SSID: KUTAP    BSSID: 18:80:90:c6:7b:20
+        // bool1 - SSID: 406      BSSID: 00:08:9f:52:b0:e4
+        // bool2 - SSID: KUTAP_N  BSSID: 40:01:7a:de:11:31
+        for(int i = 0; i < scanResultList.size(); i++) {
+            ScanResult result = scanResultList.get(i);
+            if(result.BSSID.equals("64:e5:99:db:05:c8")) { // 401-1
+                if(result.level > -60 && result.level < -48) {
+                    is_401++;
+                    //tfManager.save("401.1 ");
+                }
+            } else if(result.BSSID.equals("18:80:90:c6:7b:22")) { // 401-2
+                if(result.level > -60 && result.level < -44) {
+                    is_401++;
+                    //tfManager.save("401.2 ");
+                }
+            } else if(result.BSSID.equals("18:80:90:c6:7b:21")) { // 401-3
+                if(result.level > -60 && result.level < -44) {
+                    is_401++;
+                    //tfManager.save("401.3 ");
+                }
+            } else if(result.BSSID.equals("18:80:90:c6:7b:20")) { // 401-4
+                if(result.level > -60 && result.level < -44) {
+                    is_401++;
+                    //tfManager.save("401.4 ");
+                }
+            } else if(result.BSSID.equals("00:08:9f:52:b0:e4")) { // bol-1
+                if(result.level > -60) {
+                    is_401_bool = false;
+                    //tfManager.save("bol.1 ");
+                }
+            } else if(result.BSSID.equals("40:01:7a:de:11:31")) { // bol-2
+                if(result.level > -45) {
+                    is_401_bool = false;
+                    //tfManager.save("bol.2");
+                }
+            }
+        } // for
+        Log.d("Location", "before 401");
+        if(is_401 >= 3 && is_401_bool) {
+            Log.d("Location", "if 401");
+            location = "401강의실";
+        } else {
+            Log.d("Location", "else 401");
+            getGPSInfo();
+        }
+        Log.d("Location", "after 401");
+        unregisterReceiver(wifiReceiver);
+    }
+
+    public void getGPSInfo() {
+        Log.d("Location", "getGPSInfo");
+        try {
+            locationCount = 0;
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+        } catch(SecurityException e) {
+            e.printStackTrace();
+        }
+    }
+
+    LocationListener locationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            Log.d("Location", "locationChanged");
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
+            locationCount++;
+            if(locationCount == 2) {
+                locationManager.removeUpdates(locationListener);
+                Toast.makeText(getApplicationContext(), latitude + " / " + longitude , Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        @Override
+        public void onStatusChanged(String s, int i, Bundle bundle) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String s) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String s) {
+
+        }
+    };
+
+
+    //************************************************************************
+    // 여기까지 Location find 수정 2018.06.16
+    //************************************************************************
 
     final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
 
@@ -136,6 +270,7 @@ public class ADCMonitorService extends Service {
         // 움직임이면 5초 period로 등록
         // 움직임이 아니면 5초 증가, max 30초로 제한
         // 움직이면 5초가 최소
+
 
         boolean isCheck = false;
 
@@ -252,6 +387,12 @@ public class ADCMonitorService extends Service {
                 accStay += 50;
                 stateList.add(STAY);
                 state = STAY;
+                //************************************************************************************
+                IntentFilter intentFilter = new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+                registerReceiver(wifiReceiver, intentFilter);
+                Log.d("Location", "wifi scan");
+                wifiManager.startScan();
+                //************************************************************************************
             }
             else {
                 stateList.add(STAY);
@@ -312,6 +453,12 @@ public class ADCMonitorService extends Service {
 
         // 초기 날짜 설정
         preDate = getTime();
+
+        //*****************************************
+        wifiManager = (WifiManager)getApplicationContext().getSystemService(WIFI_SERVICE);
+        locationManager = (LocationManager)getApplicationContext().getSystemService(LOCATION_SERVICE);
+        //*****************************************
+
     }
 
     @Override
@@ -337,6 +484,7 @@ public class ADCMonitorService extends Service {
 
     public void onDestroy() {
         Toast.makeText(this, "Activity Monitor 중지", Toast.LENGTH_SHORT).show();
+        accelMonitor.onStop();
 
         try {
             // Alarm 발생 시 전송되는 broadcast 수신 receiver를 해제
