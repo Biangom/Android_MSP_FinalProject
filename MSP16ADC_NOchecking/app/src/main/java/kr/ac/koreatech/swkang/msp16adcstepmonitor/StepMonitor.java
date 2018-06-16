@@ -52,6 +52,9 @@ public class StepMonitor implements SensorEventListener {
             Log.d(LOGTAG, "Unregister Accel Listener!");
             mSensorManager.unregisterListener(this);
         }
+        // -- addpart
+        mSensorManager = null;
+        mLinear = null;
     }
 
     @Override
