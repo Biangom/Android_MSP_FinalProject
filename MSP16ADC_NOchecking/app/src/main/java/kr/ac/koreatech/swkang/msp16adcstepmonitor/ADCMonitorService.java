@@ -8,6 +8,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -26,6 +28,10 @@ public class ADCMonitorService extends Service {
     AlarmManager am;
     PendingIntent pendingIntent;
 
+    //
+//    private Context context = getApplicationContext();
+    //
+
     private boolean checkmoving = false;
 
     private PowerManager.WakeLock wakeLock;
@@ -42,7 +48,7 @@ public class ADCMonitorService extends Service {
     int accStay = 0; // 한 텀에 Stay한 시간 수
 
     int accStep = 0; // 한 텀에 Step 수
-    int totalWalk = 0; // total Moving한 시간 수
+    int movingTime = 0; // total Moving한 시간 수
     int totalStep = 0; // total Step한 시간 수
 
     static final int STAY = 0; // 현재가 가만히 있는 상태
@@ -133,6 +139,10 @@ public class ADCMonitorService extends Service {
             }
         }
     };
+//
+//    public ADCMonitorService(Context context) {
+//        this.context = context;
+//    }
 
     private void setNextAlarm(boolean moving) {
 
@@ -148,16 +158,39 @@ public class ADCMonitorService extends Service {
         // 움직였다면 현재 상태가 WALK상태
         if(moving) {
             // 현재가 Walk이고 이전에 Stay 엿으면 현재가 잘못될 수도 있으니 재검사
-
-            /*
             if(stateList.get(stateList.size()-1) == STAY) {
                 // 재검사 빼버렸음
+
+
+                stateList.add(WALK); // 먼저 상태 저장
+                // 그게 5분을 넘겼을 때만 기록한다.
+                // (X X . . (5분이상) . X O인 상태일때
+                if(accStay >= 50) {
+                    nowDate = getTime();
+                    //..
+                    // 이전에 accStay을 저장해야한다.
+                    tm.save(preDate + "~" + nowDate + " " + accStay / 10 + "분 " + "정지 ");
+                    tm.save("unknown\n");
+                    state = UN;
+                }
+                // (. (5분미만) . X O 인 상태)
+                else
+                    state = UN;
+                // 이전 Stay값 초기화(이미 X X X O or . . X O)이므로
+                accStay = 0;
+                preDate = getTime();
+                // 먼저 5분이상 넘겼는지 확인 후
             }
             // 현재 WALK이고, (1분 이상 걸은 상태)WALK상태이라면
-            else
-                */
-            if(state == WALK) {
+            else if(state == WALK) {
                 accWalk += 5; // 30초 추가후
+                movingTime += 5; // 총 movingTime도 30초 추가
+                accStep += 45; // 30초에 해당하는 걸음은 45걸음이다.
+                totalStep += 45; // total도 증가해준다.
+
+                createBroadcast("movingTime"); // 브로드캐스트 보낸다.
+                createBroadcast("totalStep"); // 브로드캐스트 보낸다.
+
                 stateList.add(WALK); // WALK 저장
             }
             // 위 블록을 빠져나오려면 state가 STAY거나 UNKNOWN일 것이다.
@@ -165,6 +198,13 @@ public class ADCMonitorService extends Service {
             // 현재 WALK이고, 이전(30초전)에 WALK이면
             else if(stateList.get(stateList.size()-1) == WALK) {
                 accWalk += 10; // 총 1분 추가
+                movingTime += 10; // 총 movingTime도 1분 추가
+                accStep += 90; // 60초에 해당하는 걸음은 90걸음이다.
+                totalStep += 90; // 총 걸음수도 증가하여준다.
+
+                createBroadcast("movingTime"); // 브로드캐스트 보낸다.
+                createBroadcast("totalStep"); // 브로드캐스트 보낸다.
+
                 stateList.add(WALK); // WALK 저장
                 state = WALK; // 그리고 state를 WALK상태로 바꾼다. 1분이상 걸었으므로
             }
@@ -173,14 +213,30 @@ public class ADCMonitorService extends Service {
             }
         }
         else { // 안움직였으면
-            /*
             if(stateList.get(stateList.size()-1) == WALK) { // 현재가 Stay엿는데 이전에 Walk 엿으면 재검사
                 // 재검사 빼버렸음
+
+                stateList.add(STAY);
+                // 이전에 (1분이상 넘겼는지 확인 후) accWalk을 저장해야한다.
+                // ( . .O O X) 인 상황
+                if(accWalk >= 10 ) {
+                    nowDate = getTime();
+                    //....이 사이에 장소 checking 해야함
+                    tm.save(preDate + "~" + nowDate + " " + accWalk / 10 + "분 " + "이동 " + accStep + "걸음\n");
+                    accStep = 0; // 현재 state가 더이상 walk가 아니므로 (UN이므로)
+                    // 누적스텝을 초기화한다.
+                    state = UN;
+                }
+                // . X O X 인 상태, 이전 값이 1분 미만의 WALK이라면
+                else
+                    state = UN;
+
+                accWalk = 0;
+                preDate = getTime();
+                // 이전 walk 초기화( 갑자기 바뀐거였으니까)
             }
             // 현재 STAY이고, 여태까지 STAY상태였으면
-            else
-             */
-            if(state == STAY) {
+            else if(state == STAY) {
                 accStay += 5; //단순하게 30초 STAY 추가
                 stateList.add(STAY);
             }
@@ -237,7 +293,6 @@ public class ADCMonitorService extends Service {
 
     @Override
     public void onCreate() {
-
         //Log.d(LOGTAG, "onCreate");
 
         // Alarm 발생 시 전송되는 broadcast를 수신할 receiver 등록
@@ -274,7 +329,13 @@ public class ADCMonitorService extends Service {
 
     public void onDestroy() {
         Toast.makeText(this, "Activity Monitor 중지", Toast.LENGTH_SHORT).show();
-        accelMonitor.onStop(); // 이 소스를 추가해야됌
+        try {
+            accelMonitor.onStop(); // 이 소스를 추가해야됌
+        }
+        catch(NullPointerException e) {
+            Log.d(LOGTAG,"****** accelMonitor is Null!! ******");
+            e.printStackTrace();
+        }
 
         try {
             // Alarm 발생 시 전송되는 broadcast 수신 receiver를 해제
@@ -315,6 +376,24 @@ public class ADCMonitorService extends Service {
 
         // 지정한 포맷으로 날짜데이터를 string으로 변환하여 반환
         return mFormat.format(mDate);
+    }
+
+    private void createBroadcast(String caseString) {
+
+        if(caseString.equals("totalStep")){
+            Intent intent = new Intent("koreatech.totalStep");
+            intent.putExtra("TOTAL_STEP", totalStep);
+            // broadcast 전송
+            sendBroadcast(intent);
+
+        }else if(caseString.equals("movingTime")) {
+            Intent intent = new Intent("koreatech.movingTime");
+            intent.putExtra("MOVING_TIME", movingTime);
+            // broadcast 전송
+            sendBroadcast(intent);
+        }
+
+
     }
 /*
     public int checking() {
