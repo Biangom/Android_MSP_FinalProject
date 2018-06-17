@@ -13,13 +13,18 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
+    /*
     private TextView mAccelX;
     private TextView mAccelY;
     private TextView mAccelZ;
+    */
+
     private TextView rmsText;
     private TextView movingText;
     private TextView logText;
@@ -27,8 +32,20 @@ public class MainActivity extends AppCompatActivity {
     private TextView infoText;
     private double rms;
 
+    //----
+    private TextView mvtText;
+    private TextView stepsText;
+    private TextView topText;
+
+    //----
+    private int movingTime;
+    private int totalStep;
+
+
+
     final int MY_PERMISSIONS_REQUEST = 1;
     boolean isPermitted = false;
+
 
     // 파일 매니저 관련 설정
     TextFileManager mFileMgr;
@@ -52,10 +69,19 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     movingText.setText("NOT Moving");
                 }
+            } else if(intent.getAction().equals("koreatech.totalStep")) {
+                totalStep = intent.getIntExtra("TOTAL_STEP", 0);
+                stepsText.setText( "Steps: "+ totalStep);
+            } else if(intent.getAction().equals("koreatech.movingTime")) {
+                movingTime = intent.getIntExtra("MOVING_TIME", 0);
+                mvtText.setText( "Moving time: "+ movingTime/10 + "분");
             }
-
         }
     };
+
+
+    public MainActivity() {
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,10 +103,18 @@ public class MainActivity extends AppCompatActivity {
 
         infoText = (TextView)findViewById(R.id.info);
 
+        //--
+        mvtText = (TextView)findViewById(R.id.mvtTextView);
+        stepsText = (TextView)findViewById(R.id.stepsTextView);
+        topText = (TextView)findViewById(R.id.topTextView);
+
 
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("kr.ac.koreatech.msp.adcstepmonitor.rms");
         intentFilter.addAction("kr.ac.koreatech.msp.adcstepmonitor.moving");
+        intentFilter.addAction("koreatech.totalStep");
+        intentFilter.addAction("koreatech.movingTime");
+
         registerReceiver(MyStepReceiver, intentFilter);
     }
 
