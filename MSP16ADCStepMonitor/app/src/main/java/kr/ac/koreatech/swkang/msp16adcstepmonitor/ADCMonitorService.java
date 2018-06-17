@@ -39,11 +39,8 @@ public class ADCMonitorService extends Service {
     private CountDownTimer timer;
 
     private StepMonitor accelMonitor;
-<<<<<<< HEAD
+
     private long period = 10000; // 기본 10초로 생각, 이 부분을 30초로 바꾸어야함.
-=======
-    private long period = 4000; // 기본 10초로 생각, 이 부분을 30초로 바꾸어야함.
->>>>>>> 05708d9c25f9915b1c3fe03d7c9f7aaf43bfaaec
     private static final long activeTime = 1000;
     private static final long periodForMoving = 30000; // 기본 30초
     private static final long periodIncrement = 5000; // 원래 5초였음
@@ -489,11 +486,9 @@ public class ADCMonitorService extends Service {
 
     public void onDestroy() {
         Toast.makeText(this, "Activity Monitor 중지", Toast.LENGTH_SHORT).show();
-<<<<<<< HEAD
+
         accelMonitor.onStop(); // 이 소스를 추가해야됌
-=======
-        accelMonitor.onStop();
->>>>>>> 05708d9c25f9915b1c3fe03d7c9f7aaf43bfaaec
+
 
         try {
             // Alarm 발생 시 전송되는 broadcast 수신 receiver를 해제
