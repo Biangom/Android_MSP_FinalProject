@@ -289,6 +289,7 @@ public class ADCMonitorService extends Service {
 
                                 @Override
                                 public void onFinish() {
+                                    tm2.save("tm2 onFinish\n");
                                     if(wakeLock != null && wakeLock.isHeld()) {
                                         wakeLock.release();
                                         wakeLock = null;
