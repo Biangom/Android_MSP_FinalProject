@@ -40,9 +40,10 @@ public class ADCMonitorService extends Service {
     private StepMonitor accelMonitor;
     private long period = 10000; // 기본 10초로 생각, 이 부분을 30초로 바꾸어야함.
     private static final long activeTime = 1000;
-    private static final long periodForMoving = 30000; // 기본 30초
-    private static final long periodIncrement = 5000; // 원래 5초였음
+    private static final long periodIncrement = 30000; // 테스트용 30초로 생각 이부분 90초로 바꾸어야함.
+
     private static final long periodMax = 30000;
+    private static final long periodForMoving = 30000; // 기본 30초
 
     int accWalk = 0; // 한 텀에 Moving한 시간 수
     int accStay = 0; // 한 텀에 Stay한 시간 수
@@ -51,9 +52,21 @@ public class ADCMonitorService extends Service {
     int movingTime = 0; // total Moving한 시간 수
     int totalStep = 0; // total Step한 시간 수
 
+    // --- 걸음, 분수 값
+    static final int STEP_THIRTY = 45; // 30초마다 걷는 걸음 수
+    static final int STEP_SIXTY = 90; // 1분마다 걷는 걸음 수
+
+
+
+    //
+
     static final int STAY = 0; // 현재가 가만히 있는 상태
     static final int WALK = 1; // 현재가 걷고 있는 상태
     static final int UN = 2; // 1분이상 걷지도않고 5분이상 쉬지도 않았을때 상태
+
+    static final int SAMPLE_STAY = 9; // 현재 moving상태와 이전 moving(S도는 W)상태 값을 검사하여
+    // 현재 state를 판별해야돼는데 판별할 이전 moving상태(S)의 갯수
+    // 30초마다 1번 검사하므로 10개의 sample이 필요 (5분이상 머물렀으면 현재 상태를 Stay로 바꾼다)
 
     // 1분이상 걸었으면 WALK
     // 5분이상 쉬었으면 STAY
@@ -61,6 +74,7 @@ public class ADCMonitorService extends Service {
     int state = STAY; // 처음엔 stay로 생각, 현재 상태를 담는다(WALK or STAY)
 
     ArrayList<Integer> stateList = new ArrayList<Integer>();
+
     Boolean[] stateListTwo = new Boolean[10];
     int listCount = 0;
 
@@ -185,8 +199,8 @@ public class ADCMonitorService extends Service {
             else if(state == WALK) {
                 accWalk += 5; // 30초 추가후
                 movingTime += 5; // 총 movingTime도 30초 추가
-                accStep += 45; // 30초에 해당하는 걸음은 45걸음이다.
-                totalStep += 45; // total도 증가해준다.
+                accStep += STEP_THIRTY; // 30초에 해당하는 걸음은 45걸음이다.
+                totalStep += STEP_THIRTY; // total도 증가해준다.
 
                 createBroadcast("movingTime"); // 브로드캐스트 보낸다.
                 createBroadcast("totalStep"); // 브로드캐스트 보낸다.
@@ -199,8 +213,8 @@ public class ADCMonitorService extends Service {
             else if(stateList.get(stateList.size()-1) == WALK) {
                 accWalk += 10; // 총 1분 추가
                 movingTime += 10; // 총 movingTime도 1분 추가
-                accStep += 90; // 60초에 해당하는 걸음은 90걸음이다.
-                totalStep += 90; // 총 걸음수도 증가하여준다.
+                accStep += STEP_SIXTY; // 60초에 해당하는 걸음은 90걸음이다.
+                totalStep += STEP_SIXTY; // 총 걸음수도 증가하여준다.
 
                 createBroadcast("movingTime"); // 브로드캐스트 보낸다.
                 createBroadcast("totalStep"); // 브로드캐스트 보낸다.
@@ -241,7 +255,7 @@ public class ADCMonitorService extends Service {
                 stateList.add(STAY);
             }
             // 그게 아니라면 이전 stateList들의 상태 9개 이상(5분)이 있는지 부터 인지 검사 해야함.
-            else if(stateList.size() >= 9 && isStayFive()) { // 먼저 요소가 9개 넘고, 그 요소들이 모두 STAY상태라면
+            else if(stateList.size() >= SAMPLE_STAY && isStayFive()) { // 먼저 요소가 9개 넘고, 그 요소들이 모두 STAY상태라면
                 accStay += 50;
                 stateList.add(STAY);
                 state = STAY;
@@ -358,7 +372,7 @@ public class ADCMonitorService extends Service {
     // 내가 만든 함수
     public boolean isStayFive() {
         boolean stayFive = true;
-        for(int i = stateList.size()-1; i >= stateList.size()-9; i-- ) { // 9개 검사.
+        for(int i = stateList.size()-1; i >= stateList.size()-SAMPLE_STAY; i-- ) { // 9개 검사.
 
             if(stateList.get(i) == WALK)
                 return false; // 하나라도 WALK면 5분이상 stay한게 아니므로 false 반환

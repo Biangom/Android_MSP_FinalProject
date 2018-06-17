@@ -37,7 +37,7 @@ public class ADCMonitorService extends Service {
 
     private StepMonitor accelMonitor;
 
-    private long period = 5000; // 기본 10초로 생각, 이 부분을 30초로 바꾸어야함.
+    private long period = 10000; // 기본 10초로 생각, 이 부분을 30초로 바꾸어야함.
     private static final long activeTime = 1000;
     private static final long periodForMoving = 30000; // 기본 30초
     private static final long periodIncrement = 5000; // 원래 5초였음
@@ -89,7 +89,7 @@ public class ADCMonitorService extends Service {
     // 추가 수정 wakelock
     boolean locationCheck = false;
     CountDownTimer locationTimer;
-    final int locationTime = 5000;
+    final int locationTime = 8000;
 
 
     BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
@@ -187,7 +187,7 @@ public class ADCMonitorService extends Service {
             if(locationCount == 2) {
                 locationManager.removeUpdates(locationListener);
                 Toast.makeText(getApplicationContext(), latitude + " / " + longitude , Toast.LENGTH_SHORT).show();
-                tm2.save(latitude + " / " + longitude);
+                tm.save(latitude + " / " + longitude);
             }
         }
 
@@ -292,7 +292,11 @@ public class ADCMonitorService extends Service {
                                     if(wakeLock != null && wakeLock.isHeld()) {
                                         wakeLock.release();
                                         wakeLock = null;
-                                        unregisterReceiver(wifiReceiver);
+                                        try {
+                                            unregisterReceiver(wifiReceiver);
+                                        } catch(Exception e) {
+                                            e.printStackTrace();
+                                        }
                                         locationManager.removeUpdates(locationListener);
                                     }
                                 }
@@ -365,7 +369,7 @@ public class ADCMonitorService extends Service {
                         stateList.add(STAY);
                     }
                     // 그게 아니라면 이전 stateList들의 상태 9개 이상(5분)이 있는지 부터 인지 검사 해야함.
-                    else if(stateList.size() >= 9) { // 먼저 요소 검사 해주고
+                    else if(stateList.size() >= 5) { // 먼저 요소 검사 해주고
                         if (isStayFive()) { // 5분동안 머물었으면
                             accStay += 50;
                             stateList.add(STAY);
@@ -436,7 +440,7 @@ public class ADCMonitorService extends Service {
                 stateList.add(STAY);
             }
             // 그게 아니라면 이전 stateList들의 상태 9개 이상(5분)이 있는지 부터 인지 검사 해야함.
-            else if(stateList.size() >= 9 && isStayFive()) { // 먼저 요소가 9개 넘고, 그 요소들이 모두 STAY상태라면
+            else if(stateList.size() >= 5 && isStayFive()) { // 먼저 요소가 9개 넘고, 그 요소들이 모두 STAY상태라면
                 accStay += 50;
                 stateList.add(STAY);
                 state = STAY;
@@ -563,7 +567,7 @@ public class ADCMonitorService extends Service {
     // 내가 만든 함수
     public boolean isStayFive() {
         boolean stayFive = true;
-        for(int i = stateList.size()-1; i >= stateList.size()-9; i-- ) { // 9개 검사.
+        for(int i = stateList.size()-1; i >= stateList.size()-5; i-- ) { // 9개 검사.
 
             if(stateList.get(i) == WALK)
                 return false; // 하나라도 WALK면 5분이상 stay한게 아니므로 false 반환
