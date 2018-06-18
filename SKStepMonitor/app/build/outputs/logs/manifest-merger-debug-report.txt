@@ -1,0 +1,123 @@
+-- Merging decision tree log ---
+manifest
+ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:2:1-30:12
+INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:2:1-30:12
+INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:2:1-30:12
+INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:2:1-30:12
+MERGED from [com.android.support:appcompat-v7:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\appcompat-v7-27.1.1.aar\e85b09b86bc9862c53e71f8d02074399\AndroidManifest.xml:17:1-22:12
+MERGED from [com.android.support.constraint:constraint-layout:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\constraint-layout-1.1.0.aar\2a61bacc61a3c48bec2f6ccb432a5dc4\AndroidManifest.xml:2:1-11:12
+MERGED from [com.android.support:support-fragment:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\support-fragment-27.1.1.aar\e948ff2613b4f98c91d94acdb83d4cb8\AndroidManifest.xml:17:1-22:12
+MERGED from [com.android.support:animated-vector-drawable:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\animated-vector-drawable-27.1.1.aar\6e0ad05e1a108bdf99f3452499d0ccfb\AndroidManifest.xml:17:1-22:12
+MERGED from [com.android.support:support-core-ui:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\support-core-ui-27.1.1.aar\0e3384abed3678e785eae36868e92f4d\AndroidManifest.xml:17:1-22:12
+MERGED from [com.android.support:support-core-utils:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\support-core-utils-27.1.1.aar\72418641857c6be0cc076a31a2901961\AndroidManifest.xml:17:1-22:12
+MERGED from [com.android.support:support-vector-drawable:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\support-vector-drawable-27.1.1.aar\4e8bceb96c474bc45457deab7f3bca0a\AndroidManifest.xml:17:1-22:12
+MERGED from [com.android.support:support-compat:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\support-compat-27.1.1.aar\4c772be4131b4bf59b6e59cbdacad74d\AndroidManifest.xml:17:1-22:12
+MERGED from [android.arch.lifecycle:livedata-core:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\livedata-core-1.1.0.aar\a70d14ec671254bd82500fa27f81f571\AndroidManifest.xml:17:1-22:12
+MERGED from [android.arch.lifecycle:viewmodel:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\viewmodel-1.1.0.aar\e031fcf2910703630e65932733284da8\AndroidManifest.xml:17:1-22:12
+MERGED from [android.arch.lifecycle:runtime:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\runtime-1.1.0.aar\0e14855ecbf36d2ce8eb61d5fed25b82\AndroidManifest.xml:17:1-22:12
+MERGED from [android.arch.core:runtime:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\runtime-1.1.0.aar\447b18fe01618ffbb5a1f7199f7110d8\AndroidManifest.xml:17:1-22:12
+INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:2:1-30:12
+INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:2:1-30:12
+INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:2:1-30:12
+	package
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:3:5-45
+		INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml
+		INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml
+	android:versionName
+		INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:2:1-30:12
+		INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml
+	android:versionCode
+		INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:2:1-30:12
+		INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml
+	xmlns:android
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:2:11-69
+uses-permission#android.permission.ACCESS_WIFI_STATE
+ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:5:5-75
+	android:name
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:5:22-73
+uses-permission#android.permission.CHANGE_WIFI_STATE
+ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:6:5-75
+	android:name
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:6:22-73
+uses-permission#android.permission.ACCESS_FINE_LOCATION
+ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:7:5-78
+	android:name
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:7:22-76
+uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
+ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:8:5-80
+	android:name
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:8:22-78
+application
+ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:10:5-28:19
+MERGED from [com.android.support.constraint:constraint-layout:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\constraint-layout-1.1.0.aar\2a61bacc61a3c48bec2f6ccb432a5dc4\AndroidManifest.xml:9:5-20
+MERGED from [com.android.support.constraint:constraint-layout:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\constraint-layout-1.1.0.aar\2a61bacc61a3c48bec2f6ccb432a5dc4\AndroidManifest.xml:9:5-20
+	android:supportsRtl
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:15:9-35
+	android:label
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:13:9-41
+	android:roundIcon
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:14:9-54
+	android:icon
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:12:9-43
+	android:allowBackup
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:11:9-35
+	android:theme
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:16:9-40
+activity#com.example.song.skstepmonitor.MainActivity
+ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:17:9-23:20
+	android:name
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:17:19-47
+intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
+ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:18:13-22:29
+action#android.intent.action.MAIN
+ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:19:17-69
+	android:name
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:19:25-66
+category#android.intent.category.LAUNCHER
+ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:21:17-77
+	android:name
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:21:27-74
+service#com.example.song.skstepmonitor.StepMonitor
+ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:25:9-27:19
+	android:name
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml:25:18-45
+uses-sdk
+INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml
+INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml
+MERGED from [com.android.support:appcompat-v7:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\appcompat-v7-27.1.1.aar\e85b09b86bc9862c53e71f8d02074399\AndroidManifest.xml:20:5-44
+MERGED from [com.android.support:appcompat-v7:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\appcompat-v7-27.1.1.aar\e85b09b86bc9862c53e71f8d02074399\AndroidManifest.xml:20:5-44
+MERGED from [com.android.support.constraint:constraint-layout:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\constraint-layout-1.1.0.aar\2a61bacc61a3c48bec2f6ccb432a5dc4\AndroidManifest.xml:5:5-7:41
+MERGED from [com.android.support.constraint:constraint-layout:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\constraint-layout-1.1.0.aar\2a61bacc61a3c48bec2f6ccb432a5dc4\AndroidManifest.xml:5:5-7:41
+MERGED from [com.android.support:support-fragment:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\support-fragment-27.1.1.aar\e948ff2613b4f98c91d94acdb83d4cb8\AndroidManifest.xml:20:5-44
+MERGED from [com.android.support:support-fragment:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\support-fragment-27.1.1.aar\e948ff2613b4f98c91d94acdb83d4cb8\AndroidManifest.xml:20:5-44
+MERGED from [com.android.support:animated-vector-drawable:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\animated-vector-drawable-27.1.1.aar\6e0ad05e1a108bdf99f3452499d0ccfb\AndroidManifest.xml:20:5-44
+MERGED from [com.android.support:animated-vector-drawable:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\animated-vector-drawable-27.1.1.aar\6e0ad05e1a108bdf99f3452499d0ccfb\AndroidManifest.xml:20:5-44
+MERGED from [com.android.support:support-core-ui:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\support-core-ui-27.1.1.aar\0e3384abed3678e785eae36868e92f4d\AndroidManifest.xml:20:5-44
+MERGED from [com.android.support:support-core-ui:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\support-core-ui-27.1.1.aar\0e3384abed3678e785eae36868e92f4d\AndroidManifest.xml:20:5-44
+MERGED from [com.android.support:support-core-utils:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\support-core-utils-27.1.1.aar\72418641857c6be0cc076a31a2901961\AndroidManifest.xml:20:5-44
+MERGED from [com.android.support:support-core-utils:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\support-core-utils-27.1.1.aar\72418641857c6be0cc076a31a2901961\AndroidManifest.xml:20:5-44
+MERGED from [com.android.support:support-vector-drawable:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\support-vector-drawable-27.1.1.aar\4e8bceb96c474bc45457deab7f3bca0a\AndroidManifest.xml:20:5-44
+MERGED from [com.android.support:support-vector-drawable:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\support-vector-drawable-27.1.1.aar\4e8bceb96c474bc45457deab7f3bca0a\AndroidManifest.xml:20:5-44
+MERGED from [com.android.support:support-compat:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\support-compat-27.1.1.aar\4c772be4131b4bf59b6e59cbdacad74d\AndroidManifest.xml:20:5-44
+MERGED from [com.android.support:support-compat:27.1.1] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\support-compat-27.1.1.aar\4c772be4131b4bf59b6e59cbdacad74d\AndroidManifest.xml:20:5-44
+MERGED from [android.arch.lifecycle:livedata-core:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\livedata-core-1.1.0.aar\a70d14ec671254bd82500fa27f81f571\AndroidManifest.xml:20:5-44
+MERGED from [android.arch.lifecycle:livedata-core:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\livedata-core-1.1.0.aar\a70d14ec671254bd82500fa27f81f571\AndroidManifest.xml:20:5-44
+MERGED from [android.arch.lifecycle:viewmodel:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\viewmodel-1.1.0.aar\e031fcf2910703630e65932733284da8\AndroidManifest.xml:20:5-44
+MERGED from [android.arch.lifecycle:viewmodel:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\viewmodel-1.1.0.aar\e031fcf2910703630e65932733284da8\AndroidManifest.xml:20:5-44
+MERGED from [android.arch.lifecycle:runtime:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\runtime-1.1.0.aar\0e14855ecbf36d2ce8eb61d5fed25b82\AndroidManifest.xml:20:5-44
+MERGED from [android.arch.lifecycle:runtime:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\runtime-1.1.0.aar\0e14855ecbf36d2ce8eb61d5fed25b82\AndroidManifest.xml:20:5-44
+MERGED from [android.arch.core:runtime:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\runtime-1.1.0.aar\447b18fe01618ffbb5a1f7199f7110d8\AndroidManifest.xml:20:5-44
+MERGED from [android.arch.core:runtime:1.1.0] C:\Users\kss78\.gradle\caches\transforms-1\files-1.1\runtime-1.1.0.aar\447b18fe01618ffbb5a1f7199f7110d8\AndroidManifest.xml:20:5-44
+INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml
+INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml
+		INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml
+		ADDED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml
+		INJECTED from C:\git\Android_MSP_FinalProject\SKStepMonitor\app\src\main\AndroidManifest.xml

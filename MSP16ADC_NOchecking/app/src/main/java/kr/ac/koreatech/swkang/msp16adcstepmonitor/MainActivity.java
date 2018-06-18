@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
                 stepsText.setText( "Steps: "+ totalStep);
             } else if(intent.getAction().equals("koreatech.movingTime")) {
                 movingTime = intent.getIntExtra("MOVING_TIME", 0);
-                mvtText.setText( "Moving time: "+ movingTime/10 + "분");
+                mvtText.setText( "Moving time: "+ movingTime / 10 + "분");
             }
         }
     };
