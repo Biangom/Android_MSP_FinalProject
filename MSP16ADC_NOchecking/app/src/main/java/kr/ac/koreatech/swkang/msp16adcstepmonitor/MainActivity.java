@@ -10,6 +10,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.TextView;
 
@@ -99,9 +100,12 @@ public class MainActivity extends AppCompatActivity {
 
         rmsText = (TextView)findViewById(R.id.rms);
         movingText = (TextView)findViewById(R.id.moving);
+        //
         logText = (TextView)findViewById(R.id.logView);
-
         infoText = (TextView)findViewById(R.id.info);
+
+        logText.setMovementMethod(new ScrollingMovementMethod());
+        infoText.setMovementMethod(new ScrollingMovementMethod());
 
         //--
         mvtText = (TextView)findViewById(R.id.mvtTextView);

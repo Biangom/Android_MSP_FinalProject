@@ -40,7 +40,7 @@ public class ADCMonitorService extends Service {
     private StepMonitor accelMonitor;
     private long period = 10000; // 기본 10초로 생각, 이 부분을 30초로 바꾸어야함.
     private static final long activeTime = 1000;
-    private static final long periodIncrement = 30000; // 테스트용 30초로 생각 이부분 90초로 바꾸어야함.
+    private static final long periodStay = 30000; // 테스트용 30초로 생각 이부분 90초로 바꾸어야함.
 
     private static final long periodMax = 30000;
     private static final long periodForMoving = 30000; // 기본 30초
@@ -64,14 +64,14 @@ public class ADCMonitorService extends Service {
     static final int WALK = 1; // 현재가 걷고 있는 상태
     static final int UN = 2; // 1분이상 걷지도않고 5분이상 쉬지도 않았을때 상태
 
-    static final int SAMPLE_STAY = 9; // 현재 moving상태와 이전 moving(S도는 W)상태 값을 검사하여
+    static final int SAMPLE_STAY = 4; // 현재 moving상태와 이전 moving(S도는 W)상태 값을 검사하여
     // 현재 state를 판별해야돼는데 판별할 이전 moving상태(S)의 갯수
     // 30초마다 1번 검사하므로 10개의 sample이 필요 (5분이상 머물렀으면 현재 상태를 Stay로 바꾼다)
 
     // 1분이상 걸었으면 WALK
     // 5분이상 쉬었으면 STAY
     // 둘 중 아무것도 아니면 UN
-    int state = STAY; // 처음엔 stay로 생각, 현재 상태를 담는다(WALK or STAY)
+    int state = UN; // 처음엔 UN로 생각, 현재 상태를 담는다(WALK or STAY)
 
     ArrayList<Integer> stateList = new ArrayList<Integer>();
 
@@ -135,6 +135,18 @@ public class ADCMonitorService extends Service {
                         // 움직임 여부에 따라 다음 alarm 설정
                         boolean moving = accelMonitor.isMoving();
 
+                        // 만약에 onSensorChaged가 실행돼지 않았으면
+                        // sensigCount 자체가 0일 것이다.
+                        if(accelMonitor.sensingCount == 0 && stateList.size() >= 1) {
+                            if(stateList.get(stateList.size()-1) == WALK)
+                                moving = true;
+                            else if(stateList.get(stateList.size()-1) == STAY )
+                                moving = false;
+                            tm2.save("x");
+                        }
+                        else if(accelMonitor.sensingCount >= 1) {
+                            tm2.save("o");
+                        }
 
                         setNextAlarm(moving);
                         // stay 상태라면 ~~추가하기
@@ -164,13 +176,11 @@ public class ADCMonitorService extends Service {
         // 움직임이 아니면 5초 증가, max 30초로 제한
         // 움직이면 5초가 최소
 
-        boolean isCheck = false;
+        //boolean isCheck = false;
 
-        if(stateList.size() == 0)
-            stateList.add(STAY);
 
         // 움직였다면 현재 상태가 WALK상태
-        if(moving) {
+        if(moving == true) {
             // 현재가 Walk이고 이전에 Stay 엿으면 현재가 잘못될 수도 있으니 재검사
             if(stateList.get(stateList.size()-1) == STAY) {
                 // 재검사 빼버렸음
@@ -184,6 +194,7 @@ public class ADCMonitorService extends Service {
                     //..
                     // 이전에 accStay을 저장해야한다.
                     tm.save(preDate + "~" + nowDate + " " + accStay / 10 + "분 " + "정지 ");
+
                     tm.save("unknown\n");
                     state = UN;
                 }
@@ -259,6 +270,7 @@ public class ADCMonitorService extends Service {
                 accStay += 50;
                 stateList.add(STAY);
                 state = STAY;
+                // period 늘려야함
             }
             else {
                 stateList.add(STAY);
@@ -269,19 +281,25 @@ public class ADCMonitorService extends Service {
         Log.d(LOGTAG, "Finaly Data: " + stateList.get( stateList.size()-1 ).toString());
         Log.d(LOGTAG, "Next alarm: " + period);
 
-        // 결과값 확인
-        tm2.delete();
-        for(int i = 0; i < stateList.size() ; i++) {
-            if(stateList.get(i) == WALK)
-                tm2.save("W");
-            else
-                tm2.save("S");
-        }
+        // 결과값 저장
+        if(stateList.get(stateList.size()-1) == WALK)
+            tm2.save("W");
+        else
+            tm2.save("S");
 
         // 다음 alarm 등록
         Intent in = new Intent("kr.ac.koreatech.msp.adcalarm");
         pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, in, 0);
 
+        // 상태가 STAY로 됐을 때에는 90초마다 울리게한다.
+        if(state == STAY) {
+            am.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                    SystemClock.elapsedRealtime() + periodStay - activeTime, pendingIntent);
+            Log.d(LOGTAG, " ******* " + Long.toString(periodStay-activeTime) + " alarm set ******* ");
+            return;
+        }
+
+        /*
         if(isCheck == false ) {
             am.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP,
                     SystemClock.elapsedRealtime() + period - activeTime, pendingIntent);
@@ -290,6 +308,9 @@ public class ADCMonitorService extends Service {
             am.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP,
                     SystemClock.elapsedRealtime() + period - activeTime , pendingIntent);
         }
+        */
+        am.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                SystemClock.elapsedRealtime() + period - activeTime , pendingIntent);
     }
 
     private void sendDataToActivity(boolean moving) {
@@ -318,6 +339,15 @@ public class ADCMonitorService extends Service {
 
         // 초기 날짜 설정
         preDate = getTime();
+
+        // SSSWWS파일 다지우고 시작.
+        tm2.delete();
+
+        // 초기 설정
+        if(stateList.size() == 0) {
+            stateList.add(STAY);
+            tm2.save("S");
+        }
     }
 
     @Override
@@ -342,6 +372,28 @@ public class ADCMonitorService extends Service {
     }
 
     public void onDestroy() {
+
+        // 지정한 남은 시간이 있으면 저장하고 끈다.
+
+        if(accWalk >= 10 ) {
+            nowDate = getTime();
+            //....이 사이에 장소 checking 해야함
+            tm.save(preDate + "~" + nowDate + " " + accWalk / 10 + "분 " + "이동 " + accStep + "걸음\n");
+            accStep = 0; // 현재 state가 더이상 walk가 아니므로 (UN이므로)
+            // 누적스텝을 초기화한다.
+            // state = UN;
+        }
+        else if(accStay >= 50) {
+            nowDate = getTime();
+            //..
+            // 이전에 accStay을 저장해야한다.
+            tm.save(preDate + "~" + nowDate + " " + accStay / 10 + "분 " + "정지 ");
+            tm.save("unknown\n");
+            // state = UN;
+        }
+
+        //
+
         Toast.makeText(this, "Activity Monitor 중지", Toast.LENGTH_SHORT).show();
         try {
             accelMonitor.onStop(); // 이 소스를 추가해야됌

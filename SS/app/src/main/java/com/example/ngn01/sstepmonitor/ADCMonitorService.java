@@ -91,7 +91,7 @@ public class ADCMonitorService extends Service {
     // 추가 수정 wakelock
     boolean locationCheck = false;
     CountDownTimer locationTimer;
-<<<<<<< HEAD
+//<<<<<<< HEAD
     final int locationTime_total = 8000;
     final int locationTime_wifi = 4000;
     // 추가 수정 Wifi AP, GPS 좌표
@@ -101,9 +101,9 @@ public class ADCMonitorService extends Service {
     final double square_lon = 127.282173;
     int ticOnce = 0;
     int unknownCount = 0;
-=======
+//=======
     final int locationTime = 8000;
->>>>>>> 848bc620add1eab14756c5bcada105a7af5bdcdd
+//>>>>>>> 848bc620add1eab14756c5bcada105a7af5bdcdd
 
 
     BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
@@ -201,12 +201,12 @@ public class ADCMonitorService extends Service {
             locationCount++;
             if(locationCount == 2) {
                 locationManager.removeUpdates(locationListener);
-<<<<<<< HEAD
+//<<<<<<< HEAD
                 tm2.save(latitude + " / " + longitude);
-=======
+//=======
                 Toast.makeText(getApplicationContext(), latitude + " / " + longitude , Toast.LENGTH_SHORT).show();
                 tm.save(latitude + " / " + longitude);
->>>>>>> 848bc620add1eab14756c5bcada105a7af5bdcdd
+//>>>>>>> 848bc620add1eab14756c5bcada105a7af5bdcdd
             }
             float[] results_gr = new float[3];
             float[] results_sq = new float[3];
@@ -330,14 +330,14 @@ public class ADCMonitorService extends Service {
                                     if(wakeLock != null && wakeLock.isHeld()) {
                                         wakeLock.release();
                                         wakeLock = null;
-<<<<<<< HEAD
-=======
+//<<<<<<< HEAD
+//=======
                                         try {
                                             unregisterReceiver(wifiReceiver);
                                         } catch(Exception e) {
                                             e.printStackTrace();
                                         }
->>>>>>> 848bc620add1eab14756c5bcada105a7af5bdcdd
+//>>>>>>> 848bc620add1eab14756c5bcada105a7af5bdcdd
                                         locationManager.removeUpdates(locationListener);
                                     }
                                     unknownCount--;
@@ -383,7 +383,7 @@ public class ADCMonitorService extends Service {
         if(moving) {
             // 현재가 Walk이고 이전에 Stay 엿으면 현재가 잘못될 수도 있으니 재검사
             if(stateList.get(stateList.size()-1) == STAY) {
-<<<<<<< HEAD
+//<<<<<< HEAD
                 // 재검사 빼버렸음
 
 
@@ -397,7 +397,7 @@ public class ADCMonitorService extends Service {
                     tm.save(preDate + "~" + nowDate + " " + accStay / 10 + "분 " + "정지 ");
                     tm.save("unknown\n");
                     state = UN;
-=======
+//=======
                 int result = checking(); // 움직였는지 안움직였는지 다시 검사한다.
                 isCheck = true; // 바뀌었으니 true로 바꾼다.
                 // 진짜 움직였으면 X X X O or . . X O 상황일 수도 있다.
@@ -436,7 +436,7 @@ public class ADCMonitorService extends Service {
                             state = STAY;
                         }
                     }
->>>>>>> 848bc620add1eab14756c5bcada105a7af5bdcdd
+//>>>>>>> 848bc620add1eab14756c5bcada105a7af5bdcdd
                 }
                 // (. (5분미만) . X O 인 상태)
                 else
