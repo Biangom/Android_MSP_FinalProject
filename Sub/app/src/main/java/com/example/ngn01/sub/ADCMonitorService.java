@@ -147,6 +147,29 @@ public class ADCMonitorService extends Service {
         // 조건5 - BSSID: 20:3a:07:9e:a6:cf  level: 55 +-8
         for(int i = 0; i < Math.min(scanResultList.size(), 15); i++) {
             ScanResult result = scanResultList.get(i);
+
+            if(result.BSSID.equals("64:e5:99:db:05:c8")) { // 401-1
+                if(result.level > -60 && result.level < -48) {
+                    is_401++;
+                    //tfManager.save("401.1 ");
+                }
+            } else if(result.BSSID.equals("18:80:90:c6:7b:22")) { // 401-2
+                if(result.level > -60 && result.level < -44) {
+                    is_401++;
+                    //tfManager.save("401.2 ");
+                }
+            } else if(result.BSSID.equals("18:80:90:c6:7b:21")) { // 401-3
+                if(result.level > -60 && result.level < -44) {
+                    is_401++;
+                    //tfManager.save("401.3 ");
+                }
+            } else if(result.BSSID.equals("18:80:90:c6:7b:20")) { // 401-4
+                if(result.level > -60 && result.level < -44) {
+                    is_401++;
+                    //tfManager.save("401.4 ");
+                }
+            }
+            /******
             if(result.BSSID.equals("64:25:99:db:05:cc")) { // 401.1
                 if(result.level > -59 && result.level < -43) {
                     is_401++;
@@ -172,7 +195,9 @@ public class ADCMonitorService extends Service {
                     is_401++;
                     Log.d(LTAG, "is_401++ con.5");
                 }
-            } else if(result.BSSID.equals("20:3a:07:9e:a6:ce")) { // 다산.1
+            }
+            *******/
+             else if(result.BSSID.equals("20:3a:07:9e:a6:ce")) { // 다산.1
                 if(result.level > -62 && result.level < -46) {
                     is_dasan++;
                     Log.d(LTAG, "is_dasan++ con.1");
