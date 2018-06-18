@@ -1,4 +1,5 @@
-package com.example.ngn01.sstepmonitor;
+package com.example.ngn01.sub;
+
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -47,7 +48,6 @@ public class ADCMonitorService extends Service {
     int accStay = 0; // 한 텀에 Stay한 시간 수
 
     int accStep = 0; // 한 텀에 Step 수
-    int movingTime = 0; // total Moving한 시간 수
     int totalWalk = 0; // total Moving한 시간 수
     int totalStep = 0; // total Step한 시간 수
 
@@ -288,6 +288,7 @@ public class ADCMonitorService extends Service {
 
                         //*****************************************************
                         // 여기서부터 Location find(wakelock 고려) 수정 2018.06.17
+                        // 추가수정 Wifi, GPS 독립구현 2018.06.18
                         //*****************************************************
 
                         /*
@@ -367,19 +368,6 @@ public class ADCMonitorService extends Service {
         if(moving) {
             // 현재가 Walk이고 이전에 Stay 엿으면 현재가 잘못될 수도 있으니 재검사
             if(stateList.get(stateList.size()-1) == STAY) {
-                // 재검사 빼버렸음
-
-
-                stateList.add(WALK); // 먼저 상태 저장
-                // 그게 5분을 넘겼을 때만 기록한다.
-                // (X X . . (5분이상) . X O인 상태일때
-                if(accStay >= 50) {
-                    nowDate = getTime();
-                    //..
-                    // 이전에 accStay을 저장해야한다.
-                    tm.save(preDate + "~" + nowDate + " " + accStay / 10 + "분 " + "정지 ");
-                    tm.save("unknown\n");
-                    state = UN;
                 int result = checking(); // 움직였는지 안움직였는지 다시 검사한다.
                 isCheck = true; // 바뀌었으니 true로 바꾼다.
                 // 진짜 움직였으면 X X X O or . . X O 상황일 수도 있다.
@@ -411,7 +399,7 @@ public class ADCMonitorService extends Service {
                         stateList.add(STAY);
                     }
                     // 그게 아니라면 이전 stateList들의 상태 9개 이상(5분)이 있는지 부터 인지 검사 해야함.
-                    else if(stateList.size() >= 5) { // 먼저 요소 검사 해주고
+                    else if(stateList.size() >= 9) { // 먼저 요소 검사 해주고
                         if (isStayFive()) { // 5분동안 머물었으면
                             accStay += 50;
                             stateList.add(STAY);
@@ -419,24 +407,10 @@ public class ADCMonitorService extends Service {
                         }
                     }
                 }
-                // (. (5분미만) . X O 인 상태)
-                else
-                    state = UN;
-                // 이전 Stay값 초기화(이미 X X X O or . . X O)이므로
-                accStay = 0;
-                preDate = getTime();
-                // 먼저 5분이상 넘겼는지 확인 후
             }
             // 현재 WALK이고, (1분 이상 걸은 상태)WALK상태이라면
             else if(state == WALK) {
                 accWalk += 5; // 30초 추가후
-                movingTime += 5; // 총 movingTime도 30초 추가
-                accStep += 45; // 30초에 해당하는 걸음은 45걸음이다.
-                totalStep += 45; // total도 증가해준다.
-
-                createBroadcast("movingTime"); // 브로드캐스트 보낸다.
-                createBroadcast("totalStep"); // 브로드캐스트 보낸다.
-
                 stateList.add(WALK); // WALK 저장
             }
             // 위 블록을 빠져나오려면 state가 STAY거나 UNKNOWN일 것이다.
@@ -444,13 +418,6 @@ public class ADCMonitorService extends Service {
             // 현재 WALK이고, 이전(30초전)에 WALK이면
             else if(stateList.get(stateList.size()-1) == WALK) {
                 accWalk += 10; // 총 1분 추가
-                movingTime += 10; // 총 movingTime도 1분 추가
-                accStep += 90; // 60초에 해당하는 걸음은 90걸음이다.
-                totalStep += 90; // 총 걸음수도 증가하여준다.
-
-                createBroadcast("movingTime"); // 브로드캐스트 보낸다.
-                createBroadcast("totalStep"); // 브로드캐스트 보낸다.
-
                 stateList.add(WALK); // WALK 저장
                 state = WALK; // 그리고 state를 WALK상태로 바꾼다. 1분이상 걸었으므로
             }
@@ -460,26 +427,42 @@ public class ADCMonitorService extends Service {
         }
         else { // 안움직였으면
             if(stateList.get(stateList.size()-1) == WALK) { // 현재가 Stay엿는데 이전에 Walk 엿으면 재검사
-                // 재검사 빼버렸음
+                int result = checking();
+                isCheck = true;
+                if(result == STAY) { // 진짜 Stay이면 (. . X O X) or ( . . O O X) 인상황
+                    stateList.add(STAY);
+                    // 이전에 (1분이상 넘겼는지 확인 후) accWalk을 저장해야한다.
+                    // ( . .O O X) 인 상황
+                    if(accWalk >= 10 ) {
+                        nowDate = getTime();
+                        //....이 사이에 장소 checking 해야함
+                        tm.save(preDate + "~" + nowDate + " " + accWalk / 10 + "분 " + "이동\n");
+                        state = UN;
+                    }
+                    // . X O X 인 상태, 이전 값이 1분 미만의 WALK이라면
+                    else
+                        state = UN;
 
-                stateList.add(STAY);
-                // 이전에 (1분이상 넘겼는지 확인 후) accWalk을 저장해야한다.
-                // ( . .O O X) 인 상황
-                if(accWalk >= 10 ) {
-                    nowDate = getTime();
-                    //....이 사이에 장소 checking 해야함
-                    tm.save(preDate + "~" + nowDate + " " + accWalk / 10 + "분 " + "이동 " + accStep + "걸음\n");
-                    accStep = 0; // 현재 state가 더이상 walk가 아니므로 (UN이므로)
-                    // 누적스텝을 초기화한다.
-                    state = UN;
+                    accWalk = 0;
+                    preDate = getTime();
+                    // 이전 walk 초기화( 갑자기 바뀐거였으니까)
                 }
-                // . X O X 인 상태, 이전 값이 1분 미만의 WALK이라면
-                else
-                    state = UN;
-
-                accWalk = 0;
-                preDate = getTime();
-                // 이전 walk 초기화( 갑자기 바뀐거였으니까)
+                // 다시 검사했는데 WALK 상태(바뀌엇음)라면
+                else if(result == WALK) {
+                    // 현재 WALK이고, (1분 이상 걸은 상태)WALK상태이라면
+                    if(state == WALK) {
+                        accWalk += 5; // 30초 추가후
+                        stateList.add(WALK); // WALK 저장
+                    }
+                    // 위 블록을 빠져나오려면 state가 STAY거나 UNKNOWN일 것이다.
+                    // 그때에 대한 처리
+                    // 현재 WALK이고, 이전(30초전)에 WALK이면
+                    else if(stateList.get(stateList.size()-1) == WALK) {
+                        accWalk += 10; // 총 1분 추가
+                        stateList.add(WALK); // WALK 저장
+                        state = WALK; // 그리고 state를 WALK상태로 바꾼다. 1분이상 걸었으므로
+                    }
+                }
             }
             // 현재 STAY이고, 여태까지 STAY상태였으면
             else if(state == STAY) {
@@ -487,7 +470,7 @@ public class ADCMonitorService extends Service {
                 stateList.add(STAY);
             }
             // 그게 아니라면 이전 stateList들의 상태 9개 이상(5분)이 있는지 부터 인지 검사 해야함.
-            else if(stateList.size() >= 5 && isStayFive()) { // 먼저 요소가 9개 넘고, 그 요소들이 모두 STAY상태라면
+            else if(stateList.size() >= 9 && isStayFive()) { // 먼저 요소가 9개 넘고, 그 요소들이 모두 STAY상태라면
                 accStay += 50;
                 stateList.add(STAY);
                 state = STAY;
@@ -529,7 +512,7 @@ public class ADCMonitorService extends Service {
         }
         else { // true이면 checking 에 진입했으므로 activetime을 2번빼준다.
             am.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                    SystemClock.elapsedRealtime() + period - activeTime , pendingIntent);
+                    SystemClock.elapsedRealtime() + period - activeTime - activeTime, pendingIntent);
         }
     }
 
@@ -616,7 +599,7 @@ public class ADCMonitorService extends Service {
     // 내가 만든 함수
     public boolean isStayFive() {
         boolean stayFive = true;
-        for(int i = stateList.size()-1; i >= stateList.size()-5; i-- ) { // 9개 검사.
+        for(int i = stateList.size()-1; i >= stateList.size()-9; i-- ) { // 9개 검사.
 
             if(stateList.get(i) == WALK)
                 return false; // 하나라도 WALK면 5분이상 stay한게 아니므로 false 반환
@@ -626,7 +609,7 @@ public class ADCMonitorService extends Service {
     }
 
     // 시간 반환하는 함수
-    private String getTime() {
+    private String getTime(){
         // mNow에 시간을 생성한 뒤
         // mDate에 그 시간에 해당하는 날짜를 생성한다.
         mNow = System.currentTimeMillis();
@@ -662,23 +645,5 @@ public class ADCMonitorService extends Service {
 
         if(checkmoving) return WALK;
         else return STAY;
-    }
-
-    private void createBroadcast(String caseString) {
-
-        if(caseString.equals("totalStep")){
-            Intent intent = new Intent("koreatech.totalStep");
-            intent.putExtra("TOTAL_STEP", totalStep);
-            // broadcast 전송
-            sendBroadcast(intent);
-
-        }else if(caseString.equals("movingTime")) {
-            Intent intent = new Intent("koreatech.movingTime");
-            intent.putExtra("MOVING_TIME", movingTime);
-            // broadcast 전송
-            sendBroadcast(intent);
-        }
-
-
     }
 }
