@@ -47,21 +47,21 @@
             android:layout_height="wrap_content"
             android:id="@+id/accelZ"/>
     </LinearLayout>
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/rms"
-        android:text="rms: 0"/>
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/moving"
-        android:text="NOT moving"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/rms"
+            android:text="rms: 0"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/moving"
+            android:text="NOT moving"/>
 
-    <TextView
-        android:id="@+id/logView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="empty" />
+        <TextView
+            android:id="@+id/logView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="empty" />
 
 </LinearLayout>

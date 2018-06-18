@@ -24,9 +24,7 @@ import android.widget.Toast;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 public class ADCMonitorService extends Service {
     private static final String LOGTAG = "ADC_Monitor_Service";
@@ -87,14 +85,23 @@ public class ADCMonitorService extends Service {
     WifiManager wifiManager;
     LocationManager locationManager;
     List<ScanResult> scanResultList;
-    String location;
+    String msp_location = "";
     int locationCount = 0;
     double latitude, longitude;
     // 추가 수정 wakelock
     boolean locationCheck = false;
     CountDownTimer locationTimer;
-    final int locationTime = 10000;
+    final int locationTime_total = 8000;
+    final int locationTime_wifi = 4000;
+    // 추가 수정 Wifi AP, GPS 좌표
+    final double ground_lat = 36.762581;
+    final double ground_lon = 127.284527;
+    final double square_lat = 36.764215;
+    final double square_lon = 127.282173;
+    int ticOnce = 0;
     int unknownCount = 0;
+    final int locationTime = 8000;
+    final String LTAG = "LocationFind";
 
 
     BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
@@ -107,7 +114,8 @@ public class ADCMonitorService extends Service {
     };
 
     public void getWifiInfo() {
-        Log.d("Location", "getWifiInfo");
+        tm.save("getWifiInfo");
+        Log.d(LTAG, "getWifiInfo");
         scanResultList = wifiManager.getScanResults();
 
         unregisterReceiver(wifiReceiver);
@@ -120,58 +128,36 @@ public class ADCMonitorService extends Service {
         // is_401_bool 조건을 추가하여
         // 와이파이 중심에서 거리는 같지만 방향이 다른 위치를 배제
         // 조건1 - SSID: cse2.4G  BSSID: 64:e5:99:db:05:c8
-        // 조건2 - SSID: (null)   BSSID: 18:80:90:c6:7b:22
-        // 조건3 - SSID: KUTAP_N  BSSID: 18:80:90:c6:7b:21
-        // 조건4 - SSID: KUTAP    BSSID: 18:80:90:c6:7b:20
-        // bool1 - SSID: 406      BSSID: 00:08:9f:52:b0:e4
-        // bool2 - SSID: KUTAP_N  BSSID: 40:01:7a:de:11:31
-        for(int i = 0; i < scanResultList.size(); i++) {
+        // 조건2 - SSID: KUTAP_N  BSSID: 18:80:90:c6:7b:21
+        for(int i = 0; i < Math.min(scanResultList.size(), 15); i++) {
             ScanResult result = scanResultList.get(i);
-            if(result.BSSID.equals("64:e5:99:db:05:c8")) { // 401-1
-                if(result.level > -60 && result.level < -48) {
+            if(result.BSSID.equals("64:e5:99:db:05:08")) { // 401-1
+                if(result.level > -64 && result.level < -46) {
                     is_401++;
-                    //tfManager.save("401.1 ");
+                    Log.d(LTAG, "is_401++ cse2.4g");
                 }
-            } else if(result.BSSID.equals("18:80:90:c6:7b:22")) { // 401-2
-                if(result.level > -60 && result.level < -44) {
+            } else if(result.BSSID.equals("18:80:90:c6:7b:21")) {
+                if(result.level > -64 && result.level < -46) {
                     is_401++;
-                    //tfManager.save("401.2 ");
-                }
-            } else if(result.BSSID.equals("18:80:90:c6:7b:21")) { // 401-3
-                if(result.level > -60 && result.level < -44) {
-                    is_401++;
-                    //tfManager.save("401.3 ");
-                }
-            } else if(result.BSSID.equals("18:80:90:c6:7b:20")) { // 401-4
-                if(result.level > -60 && result.level < -44) {
-                    is_401++;
-                    //tfManager.save("401.4 ");
-                }
-            } else if(result.BSSID.equals("00:08:9f:52:b0:e4")) { // bol-1
-                if(result.level > -60) {
-                    is_401_bool = false;
-                    //tfManager.save("bol.1 ");
-                }
-            } else if(result.BSSID.equals("40:01:7a:de:11:31")) { // bol-2
-                if(result.level > -45) {
-                    is_401_bool = false;
-                    //tfManager.save("bol.2");
+                    Log.d(LTAG, "is_401++ KUTAP_N");
                 }
             }
         } // for
-        Log.d("Location", "before 401");
-        if(is_401 >= 3 && is_401_bool) {
-            Log.d("Location", "if 401");
-            location = "401강의실";
+        Log.d(LTAG, "before Wifi decision");
+        if(is_401 == 2) {
+            Log.d(LTAG, "if 401");
+            tm.save("if 401\n");
+            msp_location = "401강의실";
         } else {
-            Log.d("Location", "else 401");
-            getGPSInfo();
+            Log.d(LTAG, "else 401");
+            tm.save("else 401\n");
         }
-        Log.d("Location", "after 401");
+        Log.d(LTAG, "after Wifi decision");
     }
 
     public void getGPSInfo() {
-        Log.d("Location", "getGPSInfo");
+        tm.save("getGPSInfo");
+        Log.d(LTAG, "getGPSInfo");
         try {
             locationCount = 0;
             latitude = 0.0;
@@ -185,15 +171,27 @@ public class ADCMonitorService extends Service {
     LocationListener locationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
-            Log.d("Location", "locationChanged");
+            Log.d(LTAG, "locationChanged");
             latitude = (latitude * locationCount / (double)(locationCount + 1)) + (location.getLatitude() / (double)(locationCount + 1));
             longitude = (longitude * locationCount / (double)(locationCount + 1)) + (location.getLongitude() / (double)(locationCount + 1));
             locationCount++;
             if(locationCount == 2) {
                 locationManager.removeUpdates(locationListener);
-                Toast.makeText(getApplicationContext(), latitude + " / " + longitude , Toast.LENGTH_SHORT).show();
-                tm2.save(latitude + " / " + longitude);
+                tm.save(latitude + " / " + longitude);
             }
+            float[] results_gr = new float[3];
+            float[] results_sq = new float[3];
+            Location.distanceBetween(ground_lat, ground_lon, latitude, longitude, results_gr);
+            Location.distanceBetween(square_lat, square_lon, latitude, longitude, results_sq);
+            if(results_gr[0] < 80.0) {
+                msp_location = "운동장";
+            } else if(results_sq[0] < 50.0) {
+                msp_location = "잔디광장";
+            } else {
+                msp_location = "Unknown";
+            }
+            tm.save(msp_location + "\n");
+            Log.d(LTAG, "now location: " + msp_location);
         }
 
         @Override
@@ -270,6 +268,7 @@ public class ADCMonitorService extends Service {
 
                         //*****************************************************
                         // 여기서부터 Location find(wakelock 고려) 수정 2018.06.17
+                        // 추가수정 Wifi, GPS 독립구현 2018.06.18
                         //*****************************************************
 
                         /*
@@ -278,31 +277,43 @@ public class ADCMonitorService extends Service {
                         wakeLock = null;
                         */
 
-                        if(locationCheck == false) {
-                            wakeLock.release();
-                            wakeLock = null;
-                        } else {
+                        if(locationCheck == true || (msp_location.equals("Unknown") && unknownCount >= 0)) {
                             IntentFilter intentFilter = new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
                             registerReceiver(wifiReceiver, intentFilter);
-                            Log.d("Loaction", "wifi scan");
+                            Log.d(LTAG, "wifi scan");
                             wifiManager.startScan();
-                            locationTimer = new CountDownTimer(locationTime, 10000) {
+                            ticOnce = 1;
+                            locationTimer = new CountDownTimer(locationTime_total, locationTime_wifi) {
                                 @Override
                                 public void onTick(long l) {
-
+                                    if(ticOnce == 1) {
+                                        Log.d(LTAG, "onTick_wifi");
+                                        try {
+                                            unregisterReceiver(wifiReceiver);
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                        getGPSInfo();
+                                    }
+                                    ticOnce--;
                                 }
 
                                 @Override
                                 public void onFinish() {
+                                    tm2.save("tm2 onFinish\n");
+                                    Log.d(LTAG, "onFinish_gpsRelease");
                                     if(wakeLock != null && wakeLock.isHeld()) {
                                         wakeLock.release();
                                         wakeLock = null;
-                                        unregisterReceiver(wifiReceiver);
                                         locationManager.removeUpdates(locationListener);
                                     }
+                                    unknownCount--;
                                 }
                             };
                             locationTimer.start();
+                        } else {
+                            wakeLock.release();
+                            wakeLock = null;
                         }
                         //*****************************************************
                         // 여기까지 Location find(wakelock 고려) 수정 2018.06.17
@@ -441,16 +452,17 @@ public class ADCMonitorService extends Service {
                 stateList.add(STAY);
             }
             // 그게 아니라면 이전 stateList들의 상태 9개 이상(5분)이 있는지 부터 인지 검사 해야함.
-            else if(stateList.size() >= 9 && isStayFive()) { // 먼저 요소가 9개 넘고, 그 요소들이 모두 STAY상태라면
+            else if(stateList.size() >= 5 && isStayFive()) { // 먼저 요소가 9개 넘고, 그 요소들이 모두 STAY상태라면
                 accStay += 50;
                 stateList.add(STAY);
                 state = STAY;
                 //*****************************************************
                 // 여기서부터 Location find(wakelock 고려) 수정 2018.06.17
-                //                // 추가 수정 wifi, gps 독립 2018.06.18
+                // 추가 수정 wifi, gps 독립 2018.06.18
                 //*****************************************************
                 locationCheck = true;
                 unknownCount = 2;
+                Log.d(LTAG, "State STAY in");
                 //*****************************************************
                 // 여기까지 Location find(wakelock 고려) 수정 2018.06.17
                 //*****************************************************
@@ -570,7 +582,7 @@ public class ADCMonitorService extends Service {
     // 내가 만든 함수
     public boolean isStayFive() {
         boolean stayFive = true;
-        for(int i = stateList.size()-1; i >= stateList.size()-9; i-- ) { // 9개 검사.
+        for(int i = stateList.size()-1; i >= stateList.size()-5; i-- ) { // 9개 검사.
 
             if(stateList.get(i) == WALK)
                 return false; // 하나라도 WALK면 5분이상 stay한게 아니므로 false 반환
