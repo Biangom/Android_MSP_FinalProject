@@ -81,6 +81,7 @@ public class ADCMonitorService extends Service {
     //************************************************************************
     // 여기부터 Location find 수정 2018.06.16
     // 추가 수정 wakelock 고려 2018.06.17
+    // 추가 수정 Wifi AP, GPS 좌표 2018.06.18
     //************************************************************************
     // Location find 추가
     WifiManager wifiManager;
@@ -93,6 +94,7 @@ public class ADCMonitorService extends Service {
     boolean locationCheck = false;
     CountDownTimer locationTimer;
     final int locationTime = 10000;
+    int unknownCount = 0;
 
 
     BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
@@ -172,6 +174,8 @@ public class ADCMonitorService extends Service {
         Log.d("Location", "getGPSInfo");
         try {
             locationCount = 0;
+            latitude = 0.0;
+            longitude = 0.0;
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
         } catch(SecurityException e) {
             e.printStackTrace();
@@ -182,8 +186,8 @@ public class ADCMonitorService extends Service {
         @Override
         public void onLocationChanged(Location location) {
             Log.d("Location", "locationChanged");
-            latitude = location.getLatitude();
-            longitude = location.getLongitude();
+            latitude = (latitude * locationCount / (double)(locationCount + 1)) + (location.getLatitude() / (double)(locationCount + 1));
+            longitude = (longitude * locationCount / (double)(locationCount + 1)) + (location.getLongitude() / (double)(locationCount + 1));
             locationCount++;
             if(locationCount == 2) {
                 locationManager.removeUpdates(locationListener);
@@ -443,8 +447,10 @@ public class ADCMonitorService extends Service {
                 state = STAY;
                 //*****************************************************
                 // 여기서부터 Location find(wakelock 고려) 수정 2018.06.17
+                //                // 추가 수정 wifi, gps 독립 2018.06.18
                 //*****************************************************
                 locationCheck = true;
+                unknownCount = 2;
                 //*****************************************************
                 // 여기까지 Location find(wakelock 고려) 수정 2018.06.17
                 //*****************************************************
