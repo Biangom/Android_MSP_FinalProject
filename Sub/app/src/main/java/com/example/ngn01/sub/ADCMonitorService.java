@@ -103,7 +103,31 @@ public class ADCMonitorService extends Service {
     int unknownCount = 0;
     final int locationTime = 8000;
     final String LTAG = "LocationFind";
-    final int stayCondition = 3;
+    final int stayCondition = 2;
+
+    public static final int cd1_401 = -51;
+    public static final int cd2_401 = -56;
+    public static final int cd3_401 = -62;
+    public static final int cd4_401 = -68;
+    public static final int cd5_401 = -67;
+
+    public static final int R1_401 =8;
+    public static final int R2_401 =12;
+    public static final int R3_401 =22;
+    public static final int R4_401 =8;
+    public static final int R5_401 =8;
+
+    public static final int cd1_das = -54;
+    public static final int cd2_das = -56;
+    public static final int cd3_das = -55;
+    public static final int cd4_das = -60;
+    public static final int cd5_das = -55;
+
+    public static final int R1_das = 15;
+    public static final int R2_das = 15;
+    public static final int R3_das = 15;
+    public static final int R4_das = 15;
+    public static final int R5_das = 15;
 
 
     // Wifi Scan Result Broadcast 를 수신하는 Receiver
@@ -140,31 +164,31 @@ public class ADCMonitorService extends Service {
         // 조건4 - SSID: (null)   BSSID: 40:01:7a:de:11:32  level: 68 +-8
         // 조건5 - SSID: KUTAP_N  BSSID: 40:01:7a:de:11:31  level: 67 +-8
         // 다산정보관 Wifi AP Fingerprint
-        // 조건1 - BSSID: 20:3a:07:9e:a6:ce  level: 54 +-8
-        // 조건2 - BSSID: 20:3a:07:9e:a6:05  level: 56 +-8
-        // 조건3 - BSSID: 20:3a:07:9e:a6:ca  level: 55 +-8
-        // 조건4 - BSSID: 20:3a:07:49:50:ee  level: 60 +-8
-        // 조건5 - BSSID: 20:3a:07:9e:a6:cf  level: 55 +-8
-        for(int i = 0; i < Math.min(scanResultList.size(), 15); i++) {
+        // 조건1 - BSSID: 20:3a:07:9e:a6:ce  level: 54 +-12
+        // 조건2 - BSSID: 20:3a:07:9e:a6:05  level: 56 +-12
+        // 조건3 - BSSID: 20:3a:07:9e:a6:ca  level: 55 +-12
+        // 조건4 - BSSID: 20:3a:07:49:50:ee  level: 60 +-12
+        // 조건5 - BSSID: 20:3a:07:9e:a6:cf  level: 55 +-12
+        for(int i = 0; i < scanResultList.size(); i++) {
             ScanResult result = scanResultList.get(i);
 
             if(result.BSSID.equals("64:e5:99:db:05:c8")) { // 401-1
-                if(result.level > -60 && result.level < -48) {
+                if(Math.abs(result.level - cd1_401) < R1_401 ) {
                     is_401++;
                     //tfManager.save("401.1 ");
                 }
             } else if(result.BSSID.equals("18:80:90:c6:7b:22")) { // 401-2
-                if(result.level > -60 && result.level < -44) {
+                if(Math.abs(result.level - cd1_401) < R1_401 ) {
                     is_401++;
                     //tfManager.save("401.2 ");
                 }
             } else if(result.BSSID.equals("18:80:90:c6:7b:21")) { // 401-3
-                if(result.level > -60 && result.level < -44) {
+                if(Math.abs(result.level - cd1_401) < R1_401 ) {
                     is_401++;
                     //tfManager.save("401.3 ");
                 }
             } else if(result.BSSID.equals("18:80:90:c6:7b:20")) { // 401-4
-                if(result.level > -60 && result.level < -44) {
+                if(Math.abs(result.level - cd1_401) < R1_401 ) {
                     is_401++;
                     //tfManager.save("401.4 ");
                 }
@@ -198,27 +222,27 @@ public class ADCMonitorService extends Service {
             }
             *******/
              else if(result.BSSID.equals("20:3a:07:9e:a6:ce")) { // 다산.1
-                if(result.level > -62 && result.level < -46) {
+                if(Math.abs(result.level - cd1_das) < R1_das) {
                     is_dasan++;
                     Log.d(LTAG, "is_dasan++ con.1");
                 }
             } else if(result.BSSID.equals("20:3a:07:9e:a6:05")) {
-                if(result.level > -64 && result.level < -48) { // 다산.2
+                if(Math.abs(result.level - cd2_das) < R2_das) { // 다산.2
                     is_dasan++;
                     Log.d(LTAG, "is_dasan++ con.2");
                 }
             } else if(result.BSSID.equals("20:3a:07:9e:a6:ca")) {
-                if (result.level > -63 && result.level < -47) { // 다산.3
+                if (Math.abs(result.level - cd3_das) < R3_das) { // 다산.3
                     is_dasan++;
                     Log.d(LTAG, "is_dasan++ con.3");
                 }
             } else if(result.BSSID.equals("20:3a:07:49:50:ee")) {
-                if (result.level > -68 && result.level < -52) { // 다산.4
+                if (Math.abs(result.level - cd4_das) < R4_das) { // 다산.4
                     is_dasan++;
                     Log.d(LTAG, "is_dasan++ con.4");
                 }
             } else if(result.BSSID.equals("20:3a:07:9e:a6:cf")) {
-                if (result.level > -63 && result.level < -57) { // 다산.5
+                if (Math.abs(result.level - cd5_das) < R5_das) { // 다산.5
                     is_dasan++;
                     Log.d(LTAG, "is_dasan++ con.5");
                 }

@@ -3,7 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/SKS.iml" filepath="$PROJECT_DIR$/SKS.iml" />
+      <module fileurl="file://C:\git\Android_MSP_FinalProject\SKS\SKS.iml" filepath="C:\git\Android_MSP_FinalProject\SKS\SKS.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\git\Android_MSP_FinalProject\SKS\app\app.iml" filepath="C:\git\Android_MSP_FinalProject\SKS\app\app.iml" />
     </modules>
   </component>
 </project>
