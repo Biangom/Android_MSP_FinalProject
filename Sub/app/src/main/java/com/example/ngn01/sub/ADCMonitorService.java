@@ -144,33 +144,33 @@ public class ADCMonitorService extends Service {
     // Wifi AP로 현재위치를 판단하는 함수
     // ScanResult 와 미리 저장한 Wifi AP Fingerprint 를 비교
     public void getWifiInfo() {
-        tm.save("getWifiInfo\n");
-        Log.d(LTAG, "getWifiInfo");
-        scanResultList = wifiManager.getScanResults();
+            tm.save("getWifiInfo\n");
+            Log.d(LTAG, "getWifiInfo");
+            scanResultList = wifiManager.getScanResults();
 
-        unregisterReceiver(wifiReceiver);
+            unregisterReceiver(wifiReceiver);
 
-        int is_401 = 0;
-        int is_dasan = 0;
+            int is_401 = 0;
+            int is_dasan = 0;
 
-        // 401 근거리의 와이파이를 등록
-        // 일정 범위 레벨의 와이파이 신호가 잡히면 관련 is_**++
-        // is_** 값의 크기가 일정 이상이면 해당 위치로 판단
-        // 와이파이 중심에서 거리는 같지만 방향이 다른 위치를 배제
-        // 401 강의실 Wifi AP Fingerprint
-        // 조건1 - SSID: ces5G    BSSID: 64:25:99:db:05:cc  level: 51 +-8
-        // 조건2 - SSID: KUTAP    BSSID: 18:80:90:c6:7b:20  level: 56 +-12
-        // 조건3 - SSID: KUTAP    BSSID: 18:80:90:c6:7b:2f  level: 62 +-22
-        // 조건4 - SSID: (null)   BSSID: 40:01:7a:de:11:32  level: 68 +-8
-        // 조건5 - SSID: KUTAP_N  BSSID: 40:01:7a:de:11:31  level: 67 +-8
-        // 다산정보관 Wifi AP Fingerprint
-        // 조건1 - BSSID: 20:3a:07:9e:a6:ce  level: 54 +-12
-        // 조건2 - BSSID: 20:3a:07:9e:a6:05  level: 56 +-12
-        // 조건3 - BSSID: 20:3a:07:9e:a6:ca  level: 55 +-12
-        // 조건4 - BSSID: 20:3a:07:49:50:ee  level: 60 +-12
-        // 조건5 - BSSID: 20:3a:07:9e:a6:cf  level: 55 +-12
-        for(int i = 0; i < scanResultList.size(); i++) {
-            ScanResult result = scanResultList.get(i);
+            // 401 근거리의 와이파이를 등록
+            // 일정 범위 레벨의 와이파이 신호가 잡히면 관련 is_**++
+            // is_** 값의 크기가 일정 이상이면 해당 위치로 판단
+            // 와이파이 중심에서 거리는 같지만 방향이 다른 위치를 배제
+            // 401 강의실 Wifi AP Fingerprint
+            // 조건1 - SSID: ces5G    BSSID: 64:25:99:db:05:cc  level: 51 +-8
+            // 조건2 - SSID: KUTAP    BSSID: 18:80:90:c6:7b:20  level: 56 +-12
+            // 조건3 - SSID: KUTAP    BSSID: 18:80:90:c6:7b:2f  level: 62 +-22
+            // 조건4 - SSID: (null)   BSSID: 40:01:7a:de:11:32  level: 68 +-8
+            // 조건5 - SSID: KUTAP_N  BSSID: 40:01:7a:de:11:31  level: 67 +-8
+            // 다산정보관 Wifi AP Fingerprint
+            // 조건1 - BSSID: 20:3a:07:9e:a6:ce  level: 54 +-12
+            // 조건2 - BSSID: 20:3a:07:9e:a6:05  level: 56 +-12
+            // 조건3 - BSSID: 20:3a:07:9e:a6:ca  level: 55 +-12
+            // 조건4 - BSSID: 20:3a:07:49:50:ee  level: 60 +-12
+            // 조건5 - BSSID: 20:3a:07:9e:a6:cf  level: 55 +-12
+            for(int i = 0; i < scanResultList.size(); i++) {
+                ScanResult result = scanResultList.get(i);
 
             if(result.BSSID.equals("64:e5:99:db:05:c8")) { // 401-1
                 if(Math.abs(result.level - cd1_401) < R1_401 ) {

@@ -10,6 +10,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiManager;
+import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -21,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 public class ADCMonitorService extends Service {
@@ -40,7 +47,7 @@ public class ADCMonitorService extends Service {
     private StepMonitor accelMonitor;
     private long period = 10000; // 기본 10초로 생각, 이 부분을 30초로 바꾸어야함.
     private static final long activeTime = 1000;
-    private static final long periodStay = 30000; // 테스트용 30초로 생각 이부분 90초로 바꾸어야함.
+    private static final long periodStay = 15000; // 테스트용 30초로 생각 이부분 90초로 바꾸어야함.
 
     private static final long periodMax = 30000;
     private static final long periodForMoving = 30000; // 기본 30초
@@ -64,7 +71,7 @@ public class ADCMonitorService extends Service {
     static final int WALK = 1; // 현재가 걷고 있는 상태
     static final int UN = 2; // 1분이상 걷지도않고 5분이상 쉬지도 않았을때 상태
 
-    static final int SAMPLE_STAY = 4; // 현재 moving상태와 이전 moving(S도는 W)상태 값을 검사하여
+    static final int SAMPLE_STAY = 2; // 현재 moving상태와 이전 moving(S도는 W)상태 값을 검사하여
     // 현재 state를 판별해야돼는데 판별할 이전 moving상태(S)의 갯수
     // 30초마다 1번 검사하므로 10개의 sample이 필요 (5분이상 머물렀으면 현재 상태를 Stay로 바꾼다)
 
@@ -89,10 +96,264 @@ public class ADCMonitorService extends Service {
     // 이전 날짜값, 현재 날짜값
     String preDate, nowDate;
 
-
-
     final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
 
+
+    //************************************************************************
+    // 여기부터 Location find 수정 2018.06.16
+    // 추가 수정 wakelock 고려 2018.06.17
+    // 추가 수정 Wifi AP, GPS 좌표 2018.06.18
+    //************************************************************************
+    // Location find 추가
+    WifiManager wifiManager;
+    LocationManager locationManager;
+    List<ScanResult> scanResultList;
+    String msp_location = "";
+    int locationCount = 0;
+    double latitude, longitude;
+    // 추가 수정 wakelock
+    boolean locationCheck = false;
+    CountDownTimer locationTimer;
+    CountDownTimer locationTimer_gps;
+    final int locationTime_wifi = 4000;
+    final int locationTime_gps = 4000;
+    // 추가 수정 Wifi AP, GPS 좌표
+    final double ground_lat = 36.762581;
+    final double ground_lon = 127.284527;
+    final double square_lat = 36.764215;
+    final double square_lon = 127.282173;
+    int unknownCount = 0;
+    final String LTAG = "LocationFind";
+
+    public static final int cd1_401 = -51;
+    public static final int cd2_401 = -56;
+    public static final int cd3_401 = -62;
+    public static final int cd4_401 = -68;
+    public static final int cd5_401 = -67;
+
+    public static final int R1_401 =8;
+    public static final int R2_401 =12;
+    public static final int R3_401 =22;
+    public static final int R4_401 =8;
+    public static final int R5_401 =8;
+
+    public static final int cd1_das = -54;
+    public static final int cd2_das = -56;
+    public static final int cd3_das = -55;
+    public static final int cd4_das = -60;
+    public static final int cd5_das = -55;
+
+    public static final int R1_das = 15;
+    public static final int R2_das = 15;
+    public static final int R3_das = 15;
+    public static final int R4_das = 15;
+    public static final int R5_das = 15;
+
+
+    // Wifi Scan Result Broadcast 를 수신하는 Receiver
+    // 해당 Broadcast 수신하면 getWifiInfo() 호출
+    BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction().equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
+                getWifiInfo();
+            }
+        }
+    };
+
+
+    // Wifi AP로 현재위치를 판단하는 함수
+    // ScanResult 와 미리 저장한 Wifi AP Fingerprint 를 비교
+    public void getWifiInfo() {
+        tm.save("getWifiInfo\n");
+        Log.d(LTAG, "getWifiInfo");
+        scanResultList = wifiManager.getScanResults();
+
+        unregisterReceiver(wifiReceiver);
+
+        int is_401 = 0;
+        int is_dasan = 0;
+
+        // 401 근거리의 와이파이를 등록
+        // 일정 범위 레벨의 와이파이 신호가 잡히면 관련 is_**++
+        // is_** 값의 크기가 일정 이상이면 해당 위치로 판단
+        // 와이파이 중심에서 거리는 같지만 방향이 다른 위치를 배제
+        // 401 강의실 Wifi AP Fingerprint
+        // 조건1 - SSID: ces5G    BSSID: 64:25:99:db:05:cc  level: 51 +-8
+        // 조건2 - SSID: KUTAP    BSSID: 18:80:90:c6:7b:20  level: 56 +-12
+        // 조건3 - SSID: KUTAP    BSSID: 18:80:90:c6:7b:2f  level: 62 +-22
+        // 조건4 - SSID: (null)   BSSID: 40:01:7a:de:11:32  level: 68 +-8
+        // 조건5 - SSID: KUTAP_N  BSSID: 40:01:7a:de:11:31  level: 67 +-8
+        // 다산정보관 Wifi AP Fingerprint
+        // 조건1 - BSSID: 20:3a:07:9e:a6:ce  level: 54 +-12
+        // 조건2 - BSSID: 20:3a:07:9e:a6:05  level: 56 +-12
+        // 조건3 - BSSID: 20:3a:07:9e:a6:ca  level: 55 +-12
+        // 조건4 - BSSID: 20:3a:07:49:50:ee  level: 60 +-12
+        // 조건5 - BSSID: 20:3a:07:9e:a6:cf  level: 55 +-12
+        for(int i = 0; i < scanResultList.size(); i++) {
+            ScanResult result = scanResultList.get(i);
+
+            if(result.BSSID.equals("64:e5:99:db:05:c8")) { // 401-1
+                if(Math.abs(result.level - cd1_401) < R1_401 ) {
+                    is_401++;
+                    //tfManager.save("401.1 ");
+                }
+            } else if(result.BSSID.equals("18:80:90:c6:7b:22")) { // 401-2
+                if(Math.abs(result.level - cd1_401) < R1_401 ) {
+                    is_401++;
+                    //tfManager.save("401.2 ");
+                }
+            } else if(result.BSSID.equals("18:80:90:c6:7b:21")) { // 401-3
+                if(Math.abs(result.level - cd1_401) < R1_401 ) {
+                    is_401++;
+                    //tfManager.save("401.3 ");
+                }
+            } else if(result.BSSID.equals("18:80:90:c6:7b:20")) { // 401-4
+                if(Math.abs(result.level - cd1_401) < R1_401 ) {
+                    is_401++;
+                    //tfManager.save("401.4 ");
+                }
+            }
+            /******
+             if(result.BSSID.equals("64:25:99:db:05:cc")) { // 401.1
+             if(result.level > -59 && result.level < -43) {
+             is_401++;
+             Log.d(LTAG, "is_401++ con.1");
+             }
+             } else if(result.BSSID.equals("18:80:90:c6:7b:20")) { // 401.2
+             if(result.level > -68 && result.level < -44) {
+             is_401++;
+             Log.d(LTAG, "is_401++ con.2");
+             }
+             } else if(result.BSSID.equals("18:80:90:c6:7b:2f")) { // 401.3
+             if(result.level > -84 && result.level < -40) {
+             is_401++;
+             Log.d(LTAG, "is_401++ con.3");
+             }
+             } else if(result.BSSID.equals("40:01:7a:de:11:32")) { // 401.4
+             if(result.level > -76 && result.level < -60) {
+             is_401++;
+             Log.d(LTAG, "is_401++ con.4");
+             }
+             } else if(result.BSSID.equals("40:01:7a:de:11:31")) { // 401.5
+             if(result.level > -75 && result.level < -59) {
+             is_401++;
+             Log.d(LTAG, "is_401++ con.5");
+             }
+             }
+             *******/
+            else if(result.BSSID.equals("20:3a:07:9e:a6:ce")) { // 다산.1
+                if(Math.abs(result.level - cd1_das) < R1_das) {
+                    is_dasan++;
+                    Log.d(LTAG, "is_dasan++ con.1");
+                }
+            } else if(result.BSSID.equals("20:3a:07:9e:a6:05")) {
+                if(Math.abs(result.level - cd2_das) < R2_das) { // 다산.2
+                    is_dasan++;
+                    Log.d(LTAG, "is_dasan++ con.2");
+                }
+            } else if(result.BSSID.equals("20:3a:07:9e:a6:ca")) {
+                if (Math.abs(result.level - cd3_das) < R3_das) { // 다산.3
+                    is_dasan++;
+                    Log.d(LTAG, "is_dasan++ con.3");
+                }
+            } else if(result.BSSID.equals("20:3a:07:49:50:ee")) {
+                if (Math.abs(result.level - cd4_das) < R4_das) { // 다산.4
+                    is_dasan++;
+                    Log.d(LTAG, "is_dasan++ con.4");
+                }
+            } else if(result.BSSID.equals("20:3a:07:9e:a6:cf")) {
+                if (Math.abs(result.level - cd5_das) < R5_das) { // 다산.5
+                    is_dasan++;
+                    Log.d(LTAG, "is_dasan++ con.5");
+                }
+            }
+        } // for
+        // is_** 값이 3 이상이면 해당 위치로 판단
+        // 전역변수 msp_location 에 판단된 위치 저장
+        Log.d(LTAG, "before Wifi decision");
+        if(is_401 >= 3) {
+            Log.d(LTAG, "if 401");
+            tm.save("if 401\n");
+            msp_location = "401강의실";
+        } else if(is_dasan >= 3) {
+            Log.d(LTAG, "if dasan");
+            tm.save("if dasan\n");
+            msp_location = "다산정보관";
+        } else {
+            Log.d(LTAG, "wifi unknown");
+            tm.save("else 401\n");
+            msp_location = "Unknown";
+        }
+        Log.d(LTAG, "after Wifi decision");
+    }
+
+    // GPS update 등록 요청함수
+    public void getGPSInfo() {
+        tm.save("getGPSInfo\n");
+        Log.d(LTAG, "getGPSInfo");
+        try {
+            locationCount = 0;
+            latitude = 0.0;
+            longitude = 0.0;
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+        } catch(SecurityException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // GPS 센서 값을 수신하는 listener
+    // 일정 횟수 update 될 때까지 얻은 위도, 경도 값들을 평균함
+    // 평균값과 미리 지정된 위치와의 거리를 비교하여 현재 위치 판단
+    LocationListener locationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            Log.d(LTAG, "locationChanged");
+            // 지금까지 얻었던 위도, 경도값과 현재 얻은 값들을 합하여 평균
+            latitude = (latitude * locationCount / (double)(locationCount + 1)) + (location.getLatitude() / (double)(locationCount + 1));
+            longitude = (longitude * locationCount / (double)(locationCount + 1)) + (location.getLongitude() / (double)(locationCount + 1));
+            // 값을 4회까지 얻고 location update 종료
+            locationCount++;
+            if(locationCount == 4) {
+                locationManager.removeUpdates(locationListener);
+                tm.save(latitude + " / " + longitude);
+            }
+            // 미리 지정된 위치와 센서를 통해 얻은 위도, 경도 값 비교
+            float[] results_gr = new float[3];
+            float[] results_sq = new float[3];
+            Location.distanceBetween(ground_lat, ground_lon, latitude, longitude, results_gr);
+            Location.distanceBetween(square_lat, square_lon, latitude, longitude, results_sq);
+            if(results_gr[0] < 80.0) {
+                msp_location = "운동장";
+            } else if(results_sq[0] < 50.0) {
+                msp_location = "잔디광장";
+            } else {
+                //msp_location = "Unknown";
+                Log.d(LTAG, "gpsUnknwon");
+            }
+            tm.save(msp_location + "\n");
+            Log.d(LTAG, "now location: " + msp_location);
+        }
+
+        @Override
+        public void onStatusChanged(String s, int i, Bundle bundle) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String s) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String s) {
+
+        }
+    };
+
+    //************************************************************************
+    // 여기까지 Location find 수정 2018.06.16
+    //************************************************************************
     // Alarm 시간이 되었을 때 안드로이드 시스템이 전송해주는 broadcast를 받을 receiver 정의
     // 움직임 여부에 따라 기준에 맞게 다음 alarm이 발생하도록 설정한다.
     private BroadcastReceiver AlarmReceiver = new BroadcastReceiver() {
@@ -154,11 +415,65 @@ public class ADCMonitorService extends Service {
                         // 화면에 움지임 여부를 표시할 수 있도록 브로드캐스트 전송
                         sendDataToActivity(moving);
 
+                        //*****************************************************
+                        // 여기서부터 Location find(wakelock 고려) 수정 2018.06.17
+                        // 추가수정 Wifi, GPS 독립구현 2018.06.18
+                        //*****************************************************
 
-                        accelMonitor = null;
+                        /*
                         // When you finish your job, RELEASE the wakelock
                         wakeLock.release();
                         wakeLock = null;
+                        */
+
+                        if(locationCheck == true || (msp_location.equals("Unknown") && unknownCount >= 0)) {
+                            IntentFilter intentFilter = new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+                            registerReceiver(wifiReceiver, intentFilter);
+                            Log.d(LTAG, "wifi scan");
+                            wifiManager.startScan();
+                            locationTimer = new CountDownTimer(locationTime_wifi, locationTime_wifi) {
+                                @Override
+                                public void onTick(long l) {
+
+                                }
+
+                                @Override
+                                public void onFinish() {
+                                    Log.d(LTAG, "onFinish_WifiRelease");
+                                    try {
+                                        unregisterReceiver(wifiReceiver);
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                    locationTimer_gps = new CountDownTimer(locationTime_gps, locationTime_gps) {
+                                        @Override
+                                        public void onTick(long l) {
+
+                                        }
+
+                                        @Override
+                                        public void onFinish() {
+                                            Log.d(LTAG, "onFinish_gpsRelease");
+                                            locationManager.removeUpdates(locationListener);
+                                            if(wakeLock != null && wakeLock.isHeld()) {
+                                                wakeLock.release();
+                                                wakeLock = null;
+                                            }
+                                        }
+                                    };
+                                    getGPSInfo();
+                                    unknownCount--;
+                                    locationTimer_gps.start();
+                                }
+                            };
+                            locationTimer.start();
+                        } else {
+                            wakeLock.release();
+                            wakeLock = null;
+                        }
+                        //*****************************************************
+                        // 여기까지 Location find(wakelock 고려) 수정 2018.06.17
+                        //*****************************************************
                     }
                 };
                 timer.start(); // 타이머를 가동한다.
@@ -176,7 +491,13 @@ public class ADCMonitorService extends Service {
         // 움직임이 아니면 5초 증가, max 30초로 제한
         // 움직이면 5초가 최소
 
-        //boolean isCheck = false;
+        //*****************************************************
+        // 여기서부터 Location find(wakelock 고려) 수정 2018.06.17
+        //*****************************************************
+        locationCheck = false;
+        //*****************************************************
+        // 여기까지 Location find(wakelock 고려) 수정 2018.06.17
+        //*****************************************************
 
 
         // 움직였다면 현재 상태가 WALK상태
@@ -194,8 +515,7 @@ public class ADCMonitorService extends Service {
                     //..
                     // 이전에 accStay을 저장해야한다.
                     tm.save(preDate + "~" + nowDate + " " + accStay / 10 + "분 " + "정지 ");
-
-                    tm.save("unknown\n");
+                    tm.save(msp_location + "\n");
                     state = UN;
                 }
                 // (. (5분미만) . X O 인 상태)
@@ -271,6 +591,16 @@ public class ADCMonitorService extends Service {
                 stateList.add(STAY);
                 state = STAY;
                 // period 늘려야함
+                //*****************************************************
+                // 여기서부터 Location find(wakelock 고려) 수정 2018.06.17
+                // 추가 수정 wifi, gps 독립 2018.06.18
+                //*****************************************************
+                locationCheck = true;
+                unknownCount = 2;
+                Log.d(LTAG, "State STAY in");
+                //*****************************************************
+                // 여기까지 Location find(wakelock 고려) 수정 2018.06.17
+                //*****************************************************
             }
             else {
                 stateList.add(STAY);
