@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/startMonitor"
+            android:layout_width="191dp"
+            android:layout_height="wrap_content"
+            android:onClick="onClick"
+            android:text="Start Monitoring" />
+
+        <Button
+            android:id="@+id/stopMonitor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onClick"
+            android:text="Stop Monitoring" />
+
+    </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/mvtTextView"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:background="#fff000"
+        android:gravity="bottom"
+        android:text="Moving time: 00분"
+        android:textAlignment="center"
+        android:textColor="@android:color/background_dark"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/stepsTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#fff000"
+        android:text="Steps: 00"
+        android:textAlignment="center"
+        android:textColor="@android:color/background_dark"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/topTextView"
+        android:layout_width="match_parent"
+        android:layout_height="34dp"
+        android:background="#fff000"
+        android:text="Top Place: unknown"
+        android:textAlignment="center"
+        android:textColor="@android:color/background_dark"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="empty"
+        android:scrollbars="vertical"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accel: " />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/rms"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="rms: 0" />
+
+    <TextView
+        android:id="@+id/moving"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="NOT moving" />
+
+    <TextView
+        android:id="@+id/logView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical"
+        android:text="empty"
+        android:textColor="@android:color/black"
+        android:textStyle="bold" />
+
+</LinearLayout>
