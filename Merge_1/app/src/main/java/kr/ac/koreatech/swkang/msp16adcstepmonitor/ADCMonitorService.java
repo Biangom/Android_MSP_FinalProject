@@ -670,6 +670,11 @@ public class ADCMonitorService extends Service {
         // 초기 날짜 설정
         preDate = getTime();
 
+        //*****************************************
+        wifiManager = (WifiManager)getApplicationContext().getSystemService(WIFI_SERVICE);
+        locationManager = (LocationManager)getApplicationContext().getSystemService(LOCATION_SERVICE);
+        //*****************************************
+
         // SSSWWS파일 다지우고 시작.
         tm2.delete();
 
