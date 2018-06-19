@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
@@ -16,15 +17,12 @@ import android.widget.TextView;
 
 import org.w3c.dom.Text;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
-    /*
-    private TextView mAccelX;
-    private TextView mAccelY;
-    private TextView mAccelZ;
-    */
 
     private TextView rmsText;
     private TextView movingText;
@@ -42,14 +40,19 @@ public class MainActivity extends AppCompatActivity {
     private int movingTime;
     private int totalStep;
 
+    // 날짜관련
+    long mNow;  // time을 저장하는 변수
+    Date mDate; // time에 해당하는 날짜를 담을 객체
 
+    // format을 지정해주는 mFormat 객체 생성
+    SimpleDateFormat mFormat = new SimpleDateFormat("yyyy년 MM월 dd일");
 
     final int MY_PERMISSIONS_REQUEST = 1;
     boolean isPermitted = false;
 
 
     // 파일 매니저 관련 설정
-    TextFileManager mFileMgr;
+    TextFileManager mFileMgr; // 이동/정지 저장하는 애
     TextFileManager2 mTestMgr;
 
     // 주기적으로 함수를 실행하기 위한
@@ -119,6 +122,11 @@ public class MainActivity extends AppCompatActivity {
         intentFilter.addAction("koreatech.totalStep");
         intentFilter.addAction("koreatech.movingTime");
 
+        // 날짜를 생성하여 제목을 초기화한다.
+        ActionBar ab = getSupportActionBar();
+        String title = getDate();
+        ab.setTitle(title);
+
         registerReceiver(MyStepReceiver, intentFilter);
     }
 
@@ -128,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
         // timertask를 시작한다.
         logText.setText(mFileMgr.load());
         infoText.setText(mTestMgr.load());
+
         startTimerTask();
     }
 
@@ -243,4 +252,15 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     } // onRequestPermissionsResult()
+
+    // 시간 반환하는 함수
+    private String getDate(){
+        // mNow에 시간을 생성한 뒤
+        // mDate에 그 시간에 해당하는 날짜를 생성한다.
+        mNow = System.currentTimeMillis();
+        mDate = new Date(mNow);
+
+        // 지정한 포맷으로 날짜데이터를 string으로 변환하여 반환
+        return mFormat.format(mDate);
+    }
 }

@@ -64,14 +64,11 @@ public class ADCMonitorService extends Service {
     static final int STEP_SIXTY = 90; // 1분마다 걷는 걸음 수
 
 
-
-    //
-
     static final int STAY = 0; // 현재가 가만히 있는 상태
     static final int WALK = 1; // 현재가 걷고 있는 상태
     static final int UN = 2; // 1분이상 걷지도않고 5분이상 쉬지도 않았을때 상태
 
-    static final int SAMPLE_STAY = 2; // 현재 moving상태와 이전 moving(S도는 W)상태 값을 검사하여
+    static final int SAMPLE_STAY = 3; // 현재 moving상태와 이전 moving(S도는 W)상태 값을 검사하여
     // 현재 state를 판별해야돼는데 판별할 이전 moving상태(S)의 갯수
     // 30초마다 1번 검사하므로 10개의 sample이 필요 (5분이상 머물렀으면 현재 상태를 Stay로 바꾼다)
 
@@ -82,19 +79,20 @@ public class ADCMonitorService extends Service {
 
     ArrayList<Integer> stateList = new ArrayList<Integer>();
 
-    Boolean[] stateListTwo = new Boolean[10];
-    int listCount = 0;
-
     TextFileManager tm = new TextFileManager();
     TextFileManager2 tm2 = new TextFileManager2();
 
-    // 날짜관련
+    // *** 날짜관련
     long mNow;  // time을 저장하는 변수
     Date mDate; // time에 해당하는 날짜를 담을 객체
+
     // format을 지정해주는 mFormat 객체 생성
     SimpleDateFormat mFormat = new SimpleDateFormat("hh:mm");
+
     // 이전 날짜값, 현재 날짜값
     String preDate, nowDate;
+
+    // -
 
     final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
 
@@ -667,7 +665,7 @@ public class ADCMonitorService extends Service {
         // startId: start 요청을 나타내는 unique integer id
 
         //Log.d(LOGTAG, "onStartCommand");
-        Toast.makeText(this, "Activity Monitor 시작", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "StepMonitor 시작", Toast.LENGTH_SHORT).show();
 
         // Alarm이 발생할 시간이 되었을 때, 안드로이드 시스템에 전송을 요청할 broadcast를 지정
         Intent in = new Intent("kr.ac.koreatech.msp.adcalarm");
@@ -704,7 +702,7 @@ public class ADCMonitorService extends Service {
 
         //
 
-        Toast.makeText(this, "Activity Monitor 중지", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "StepMonitor 중지", Toast.LENGTH_SHORT).show();
         try {
             accelMonitor.onStop(); // 이 소스를 추가해야됌
         }
@@ -771,32 +769,4 @@ public class ADCMonitorService extends Service {
 
 
     }
-/*
-    public int checking() {
-        accelMonitor = new StepMonitor(this);
-        accelMonitor.onStart();
-
-
-        timer = new CountDownTimer(activeTime, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-            }
-            @Override
-            public void onFinish() {
-                // 이 함수는 onReceive가 끝나고 1초 뒤에 실행한다.
-
-                //Log.d(LOGTAG, "1-second accel data collected!!");
-                // stop the accel data update
-                accelMonitor.onStop();
-
-                // 움직임 여부에 따라 다음 alarm 설정
-                checkmoving = accelMonitor.isMoving();
-            }
-        };
-        timer.start(); // 타이머를 가동한다.
-
-
-        if(checkmoving) return WALK;
-        else return STAY;
-    }*/
 }
