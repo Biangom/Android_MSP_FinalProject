@@ -256,7 +256,7 @@ public class ADCMonitorService extends Service {
         } else {
             Log.d(LTAG, "wifi unknown");
             tm.save("else 401\n");
-            msp_location = "Unknown";
+            msp_location = "실내";
         }
         Log.d(LTAG, "after Wifi decision");
     }
@@ -303,6 +303,9 @@ public class ADCMonitorService extends Service {
             } else {
                 //msp_location = "Unknown";
                 Log.d(LTAG, "gpsUnknwon");
+                if(msp_location.equals("실내")) {
+                    msp_location = "실외";
+                }
             }
             tm.save(msp_location + "\n");
             Log.d(LTAG, "now location: " + msp_location);
@@ -399,7 +402,8 @@ public class ADCMonitorService extends Service {
                         wakeLock = null;
                         */
 
-                        if(locationCheck == true || (msp_location.equals("Unknown") && unknownCount >= 0)) {
+                        if(locationCheck == true || (msp_location.equals("실내") && unknownCount >= 0)
+                                || (msp_location.equals("실외") && unknownCount >= 0)) {
                             IntentFilter intentFilter = new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
                             registerReceiver(wifiReceiver, intentFilter);
                             Log.d(LTAG, "wifi scan");
