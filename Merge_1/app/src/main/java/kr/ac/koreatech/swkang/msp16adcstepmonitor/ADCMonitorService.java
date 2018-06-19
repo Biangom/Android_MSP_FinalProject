@@ -131,11 +131,11 @@ public class ADCMonitorService extends Service {
     public static final int cd4_401 = -68;
     public static final int cd5_401 = -67;
 
-    public static final int R1_401 =8;
-    public static final int R2_401 =12;
-    public static final int R3_401 =22;
-    public static final int R4_401 =8;
-    public static final int R5_401 =8;
+    public static final int R1_401 =15;
+    public static final int R2_401 =15;
+    public static final int R3_401 =25;
+    public static final int R4_401 =15;
+    public static final int R5_401 =15;
 
     public static final int cd1_das = -54;
     public static final int cd2_das = -56;
@@ -192,57 +192,32 @@ public class ADCMonitorService extends Service {
         // 조건5 - BSSID: 20:3a:07:9e:a6:cf  level: 55 +-12
         for(int i = 0; i < scanResultList.size(); i++) {
             ScanResult result = scanResultList.get(i);
-
-            if(result.BSSID.equals("64:e5:99:db:05:c8")) { // 401-1
-                if(Math.abs(result.level - cd1_401) < R1_401 ) {
+            if (result.BSSID.equals("64:25:99:db:05:cc")) { // 401.1
+                if (Math.abs(result.level - cd1_401) < R1_401) {
                     is_401++;
-                    //tfManager.save("401.1 ");
+                    Log.d(LTAG, "is_401++ con.1");
                 }
-            } else if(result.BSSID.equals("18:80:90:c6:7b:22")) { // 401-2
-                if(Math.abs(result.level - cd1_401) < R1_401 ) {
+            } else if (result.BSSID.equals("18:80:90:c6:7b:20")) { // 401.2
+                if (Math.abs(result.level - cd2_401) < R2_401) {
                     is_401++;
-                    //tfManager.save("401.2 ");
+                    Log.d(LTAG, "is_401++ con.2");
                 }
-            } else if(result.BSSID.equals("18:80:90:c6:7b:21")) { // 401-3
-                if(Math.abs(result.level - cd1_401) < R1_401 ) {
+            } else if (result.BSSID.equals("18:80:90:c6:7b:2f")) { // 401.3
+                if (Math.abs(result.level - cd3_401) < R3_401) {
                     is_401++;
-                    //tfManager.save("401.3 ");
+                    Log.d(LTAG, "is_401++ con.3");
                 }
-            } else if(result.BSSID.equals("18:80:90:c6:7b:20")) { // 401-4
-                if(Math.abs(result.level - cd1_401) < R1_401 ) {
+            } else if (result.BSSID.equals("40:01:7a:de:11:32")) { // 401.4
+                if (Math.abs(result.level - cd4_401) < R4_401) {
                     is_401++;
-                    //tfManager.save("401.4 ");
+                    Log.d(LTAG, "is_401++ con.4");
                 }
-            }
-            /******
-             if(result.BSSID.equals("64:25:99:db:05:cc")) { // 401.1
-             if(result.level > -59 && result.level < -43) {
-             is_401++;
-             Log.d(LTAG, "is_401++ con.1");
-             }
-             } else if(result.BSSID.equals("18:80:90:c6:7b:20")) { // 401.2
-             if(result.level > -68 && result.level < -44) {
-             is_401++;
-             Log.d(LTAG, "is_401++ con.2");
-             }
-             } else if(result.BSSID.equals("18:80:90:c6:7b:2f")) { // 401.3
-             if(result.level > -84 && result.level < -40) {
-             is_401++;
-             Log.d(LTAG, "is_401++ con.3");
-             }
-             } else if(result.BSSID.equals("40:01:7a:de:11:32")) { // 401.4
-             if(result.level > -76 && result.level < -60) {
-             is_401++;
-             Log.d(LTAG, "is_401++ con.4");
-             }
-             } else if(result.BSSID.equals("40:01:7a:de:11:31")) { // 401.5
-             if(result.level > -75 && result.level < -59) {
-             is_401++;
-             Log.d(LTAG, "is_401++ con.5");
-             }
-             }
-             *******/
-            else if(result.BSSID.equals("20:3a:07:9e:a6:ce")) { // 다산.1
+            } else if (result.BSSID.equals("40:01:7a:de:11:31")) { // 401.5
+                if (Math.abs(result.level - cd5_401) < R5_401) {
+                    is_401++;
+                    Log.d(LTAG, "is_401++ con.5");
+                }
+            } else if(result.BSSID.equals("20:3a:07:9e:a6:ce")) { // 다산.1
                 if(Math.abs(result.level - cd1_das) < R1_das) {
                     is_dasan++;
                     Log.d(LTAG, "is_dasan++ con.1");
