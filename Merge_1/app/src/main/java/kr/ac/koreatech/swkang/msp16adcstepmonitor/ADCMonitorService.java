@@ -297,13 +297,9 @@ public class ADCMonitorService extends Service {
             Location.distanceBetween(ground_lat, ground_lon, latitude, longitude, results_gr);
             Location.distanceBetween(square_lat, square_lon, latitude, longitude, results_sq);
             if(results_gr[0] < 80.0) {
-                if(!(msp_location.equals("401강의실") || msp_location.equals("다산정보관"))) {
-                    msp_location = "운동장";
-                }
+                msp_location = "운동장";
             } else if(results_sq[0] < 50.0) {
-                if(!(msp_location.equals("401강의실") || msp_location.equals("다산정보관"))) {
-                    msp_location = "잔디광장";
-                }
+                msp_location = "잔디광장";
             } else {
                 //msp_location = "Unknown";
                 Log.d(LTAG, "gpsUnknwon");
