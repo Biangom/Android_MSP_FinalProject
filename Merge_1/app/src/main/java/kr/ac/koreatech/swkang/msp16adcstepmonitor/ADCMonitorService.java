@@ -297,9 +297,13 @@ public class ADCMonitorService extends Service {
             Location.distanceBetween(ground_lat, ground_lon, latitude, longitude, results_gr);
             Location.distanceBetween(square_lat, square_lon, latitude, longitude, results_sq);
             if(results_gr[0] < 80.0) {
-                msp_location = "운동장";
+                if(!(msp_location.equals("401강의실") || msp_location.equals("다산정보관"))) {
+                    msp_location = "운동장";
+                }
             } else if(results_sq[0] < 50.0) {
-                msp_location = "잔디광장";
+                if(!(msp_location.equals("401강의실") || msp_location.equals("다산정보관"))) {
+                    msp_location = "잔디광장";
+                }
             } else {
                 //msp_location = "Unknown";
                 Log.d(LTAG, "gpsUnknwon");
@@ -440,7 +444,13 @@ public class ADCMonitorService extends Service {
                                     };
                                     getGPSInfo();
                                     unknownCount--;
-                                    locationTimer_gps.start();
+                                    if(!(msp_location.equals("401강의실") || msp_location.equals("다산정보관"))) {
+                                        locationTimer_gps.start();
+                                    }
+                                    if(wakeLock != null && wakeLock.isHeld()) {
+                                        wakeLock.release();
+                                        wakeLock = null;
+                                    }
                                 }
                             };
                             locationTimer.start();
@@ -574,6 +584,7 @@ public class ADCMonitorService extends Service {
                 //*****************************************************
                 locationCheck = true;
                 unknownCount = 2;
+                msp_location = "";
                 Log.d(LTAG, "State STAY in");
                 //*****************************************************
                 // 여기까지 Location find(wakelock 고려) 수정 2018.06.17
