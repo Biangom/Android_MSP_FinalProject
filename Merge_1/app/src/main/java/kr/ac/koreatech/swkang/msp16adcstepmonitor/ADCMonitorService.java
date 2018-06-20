@@ -438,9 +438,9 @@ public class ADCMonitorService extends Service {
                                             }
                                         }
                                     };
-                                    getGPSInfo();
-                                    unknownCount--;
                                     if(!(msp_location.equals("401강의실") || msp_location.equals("다산정보관"))) {
+                                        getGPSInfo();
+                                        unknownCount--;
                                         locationTimer_gps.start();
                                     }
                                     if(wakeLock != null && wakeLock.isHeld()) {
