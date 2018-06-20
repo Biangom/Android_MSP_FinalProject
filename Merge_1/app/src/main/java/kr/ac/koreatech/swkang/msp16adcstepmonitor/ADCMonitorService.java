@@ -33,24 +33,16 @@ import java.util.Queue;
 public class ADCMonitorService extends Service {
     private static final String LOGTAG = "ADC_Monitor_Service";
     AlarmManager am;
-    PendingIntent pendingIntent;
-
-    //
-//    private Context context = getApplicationContext();
-    //
-
-    private boolean checkmoving = false;
+    PendingIntent pendingIntent; // 브로드캐스트 리시버를 설정한 팬딩인텐트
 
     private PowerManager.WakeLock wakeLock;
     private CountDownTimer timer;
 
     private StepMonitor accelMonitor;
-    private long period = 10000; // 기본 10초로 생각, 이 부분을 30초로 바꾸어야함.
+    private long period = 30000; // 기본 10초로 생각, 이 부분을 30초로 바꾸어야함.
     private static final long activeTime = 1000;
-    private static final long periodStay = 15000; // 테스트용 30초로 생각 이부분 90초로 바꾸어야함.
+    private static final long periodStay = 90000; // 테스트용 30초로 생각 이부분 90초로 바꾸어야함.
 
-    private static final long periodMax = 30000;
-    private static final long periodForMoving = 30000; // 기본 30초
 
     int accWalk = 0; // 한 텀에 Moving한 시간 수
     int accStay = 0; // 한 텀에 Stay한 시간 수
@@ -68,7 +60,7 @@ public class ADCMonitorService extends Service {
     static final int WALK = 1; // 현재가 걷고 있는 상태
     static final int UN = 2; // 1분이상 걷지도않고 5분이상 쉬지도 않았을때 상태
 
-    static final int SAMPLE_STAY = 3; // 현재 moving상태와 이전 moving(S도는 W)상태 값을 검사하여
+    static final int SAMPLE_STAY = 9; // 현재 moving상태와 이전 moving(S도는 W)상태 값을 검사하여
     // 현재 state를 판별해야돼는데 판별할 이전 moving상태(S)의 갯수
     // 30초마다 1번 검사하므로 10개의 sample이 필요 (5분이상 머물렀으면 현재 상태를 Stay로 바꾼다)
 
@@ -98,8 +90,6 @@ public class ADCMonitorService extends Service {
     // 이전 날짜값, 현재 날짜값
     String preDate, nowDate;
 
-    // -
-
     final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
 
 
@@ -112,52 +102,57 @@ public class ADCMonitorService extends Service {
     WifiManager wifiManager;
     LocationManager locationManager;
     List<ScanResult> scanResultList;
-    String msp_location = "";
+
+    String msp_location = ""; // 장소를 저장할 변수 선언
     int locationCount = 0;
     double latitude, longitude;
     // 추가 수정 wakelock
     boolean locationCheck = false;
     CountDownTimer locationTimer;
     CountDownTimer locationTimer_gps;
-    final int locationTime_wifi = 4000;
-    final int locationTime_gps = 4000;
+    final int locationTime_wifi = 8000; // activeTime (wifi를 스캔할)
+    final int locationTime_gps = 8000; // activeTime (gps를 스캔할)
     // 추가 수정 Wifi AP, GPS 좌표
-    final double ground_lat = 36.762581;
-    final double ground_lon = 127.284527;
-    final double square_lat = 36.764215;
-    final double square_lon = 127.282173;
+    final double ground_lat = 36.762581; // 운동장 gps
+    final double ground_lon = 127.284527; // 운동장 gps
+    final double square_lat = 36.764215; // 대학본부 앞 gps
+    final double square_lon = 127.282173; // 대학본부 앞 gps
     int unknownCount = 0;
     final String LTAG = "LocationFind";
 
+    // 기준 검사값 dBm
     public static final int cd1_401 = -51;
     public static final int cd2_401 = -56;
     public static final int cd3_401 = -62;
     public static final int cd4_401 = -68;
     public static final int cd5_401 = -67;
 
+    // 샘플과 기준 검사값 차이
     public static final int R1_401 =15;
     public static final int R2_401 =15;
     public static final int R3_401 =25;
     public static final int R4_401 =15;
     public static final int R5_401 =15;
 
+    // 기준 검사값 dBm
     public static final int cd1_das = -54;
     public static final int cd2_das = -56;
     public static final int cd3_das = -55;
     public static final int cd4_das = -60;
     public static final int cd5_das = -55;
 
+    //샘플과 기준 검사값 차이
     public static final int R1_das = 15;
     public static final int R2_das = 15;
     public static final int R3_das = 15;
     public static final int R4_das = 15;
     public static final int R5_das = 15;
 
-    // top place
+    // top place 저장할 변수 선언
     public String top_location = "";
     public int top_accStay = 0;
 
-    //-- place
+    // 4개의 장소 저장할 배열 선언
     placeInfo placeList[];
 
 
@@ -176,7 +171,7 @@ public class ADCMonitorService extends Service {
     // Wifi AP로 현재위치를 판단하는 함수
     // ScanResult 와 미리 저장한 Wifi AP Fingerprint 를 비교
     public void getWifiInfo() {
-        tm.save("getWifiInfo\n");
+        //tm.save("getWifiInfo\n");
         Log.d(LTAG, "getWifiInfo");
         scanResultList = wifiManager.getScanResults();
 
@@ -260,15 +255,15 @@ public class ADCMonitorService extends Service {
         Log.d(LTAG, "before Wifi decision");
         if(is_401 >= 3) {
             Log.d(LTAG, "if 401");
-            tm.save("if 401\n");
+            //tm.save("if 401\n");
             msp_location = CLASS ;//"401강의실";
-        } else if(is_dasan >= 3) {
+        } else if(is_dasan >= 2) {
             Log.d(LTAG, "if dasan");
-            tm.save("if dasan\n");
+            //tm.save("if dasan\n");
             msp_location = LIBRARY;//"다산정보관";
         } else {
             Log.d(LTAG, "wifi unknown");
-            tm.save("else 401\n");
+            //tm.save("else 401\n");
             msp_location = "실내";
         }
         Log.d(LTAG, "after Wifi decision");
@@ -276,7 +271,7 @@ public class ADCMonitorService extends Service {
 
     // GPS update 등록 요청함수
     public void getGPSInfo() {
-        tm.save("getGPSInfo\n");
+        //tm.save("getGPSInfo\n");
         Log.d(LTAG, "getGPSInfo");
         try {
             locationCount = 0;
@@ -302,7 +297,7 @@ public class ADCMonitorService extends Service {
             locationCount++;
             if(locationCount == 4) {
                 locationManager.removeUpdates(locationListener);
-                tm.save(latitude + " / " + longitude);
+                //tm.save(latitude + " / " + longitude);
             }
             // 미리 지정된 위치와 센서를 통해 얻은 위도, 경도 값 비교
             float[] results_gr = new float[3];
@@ -320,7 +315,7 @@ public class ADCMonitorService extends Service {
                     msp_location = "실외";
                 }
             }
-            tm.save(msp_location + "\n");
+            //tm.save(msp_location + "\n");
             Log.d(LTAG, "now location: " + msp_location);
         }
 
@@ -394,10 +389,10 @@ public class ADCMonitorService extends Service {
                                 moving = true;
                             else if(stateList.get(stateList.size()-1) == STAY )
                                 moving = false;
-                            tm2.save("x");
+                            //tm2.save("x");
                         }
                         else if(accelMonitor.sensingCount >= 1) {
-                            tm2.save("o");
+                            //tm2.save("o");
                         }
 
                         setNextAlarm(moving);
@@ -410,12 +405,6 @@ public class ADCMonitorService extends Service {
                         // 여기서부터 Location find(wakelock 고려) 수정 2018.06.17
                         // 추가수정 Wifi, GPS 독립구현 2018.06.18
                         //*****************************************************
-
-                        /*
-                        // When you finish your job, RELEASE the wakelock
-                        wakeLock.release();
-                        wakeLock = null;
-                        */
 
                         if(locationCheck == true || (msp_location.equals("실내") && unknownCount >= 0)
                                 || (msp_location.equals("실외") && unknownCount >= 0)) {
@@ -469,42 +458,23 @@ public class ADCMonitorService extends Service {
                             wakeLock.release();
                             wakeLock = null;
                         }
-                        //*****************************************************
-                        // 여기까지 Location find(wakelock 고려) 수정 2018.06.17
-                        //*****************************************************
+
                     }
                 };
                 timer.start(); // 타이머를 가동한다.
             }
         }
     };
-//
-//    public ADCMonitorService(Context context) {
-//        this.context = context;
-//    }
+
 
     private void setNextAlarm(boolean moving) {
 
-        // 움직임이면 5초 period로 등록
-        // 움직임이 아니면 5초 증가, max 30초로 제한
-        // 움직이면 5초가 최소
-
-        //*****************************************************
-        // 여기서부터 Location find(wakelock 고려) 수정 2018.06.17
-        //*****************************************************
         locationCheck = false;
-        //*****************************************************
-        // 여기까지 Location find(wakelock 고려) 수정 2018.06.17
-        //*****************************************************
-
 
         // 움직였다면 현재 상태가 WALK상태
         if(moving == true) {
             // 현재가 Walk이고 이전에 Stay 엿으면 현재가 잘못될 수도 있으니 재검사
             if(stateList.get(stateList.size()-1) == STAY) {
-                // 재검사 빼버렸음
-
-
                 stateList.add(WALK); // 먼저 상태 저장
                 // 그게 5분을 넘겼을 때만 기록한다.
                 // (X X . . (5분이상) . X O인 상태일때
@@ -605,33 +575,19 @@ public class ADCMonitorService extends Service {
                 accStay += 50;
                 stateList.add(STAY);
                 state = STAY;
-                // period 늘려야함
-                //*****************************************************
-                // 여기서부터 Location find(wakelock 고려) 수정 2018.06.17
-                // 추가 수정 wifi, gps 독립 2018.06.18
-                //*****************************************************
+
                 locationCheck = true;
                 unknownCount = 2;
                 msp_location = "";
                 Log.d(LTAG, "State STAY in");
-                //*****************************************************
-                // 여기까지 Location find(wakelock 고려) 수정 2018.06.17
-                //*****************************************************
+
             }
             else {
                 stateList.add(STAY);
             }
         }
-
-
         Log.d(LOGTAG, "Finaly Data: " + stateList.get( stateList.size()-1 ).toString());
         Log.d(LOGTAG, "Next alarm: " + period);
-
-        // 결과값 저장
-        if(stateList.get(stateList.size()-1) == WALK)
-            tm2.save("W");
-        else
-            tm2.save("S");
 
         // 다음 alarm 등록
         Intent in = new Intent("kr.ac.koreatech.msp.adcalarm");
@@ -664,8 +620,6 @@ public class ADCMonitorService extends Service {
 
     @Override
     public void onCreate() {
-        //Log.d(LOGTAG, "onCreate");
-
         // Alarm 발생 시 전송되는 broadcast를 수신할 receiver 등록
         IntentFilter intentFilter = new IntentFilter("kr.ac.koreatech.msp.adcalarm");
         registerReceiver(AlarmReceiver, intentFilter);
@@ -729,15 +683,12 @@ public class ADCMonitorService extends Service {
             tm.save(preDate + "~" + nowDate + " " + accWalk / 10 + "분 " + "이동 " + accStep + "걸음\n");
             accStep = 0; // 현재 state가 더이상 walk가 아니므로 (UN이므로)
             // 누적스텝을 초기화한다.
-            // state = UN;
         }
         else if(accStay >= 50) {
             nowDate = getTime();
-            //..
             // 이전에 accStay을 저장해야한다.
             tm.save(preDate + "~" + nowDate + " " + accStay / 10 + "분 " + "정지 ");
             tm.save("unknown\n");
-            // state = UN;
         }
 
         //
@@ -771,7 +722,7 @@ public class ADCMonitorService extends Service {
         allBroadcast();
     }
 
-    // 내가 만든 함수
+    // 만약 5분 동안 정지했더라면?
     public boolean isStayFive() {
         boolean stayFive = true;
         for(int i = stateList.size()-1; i >= stateList.size()-SAMPLE_STAY; i-- ) { // 9개 검사.

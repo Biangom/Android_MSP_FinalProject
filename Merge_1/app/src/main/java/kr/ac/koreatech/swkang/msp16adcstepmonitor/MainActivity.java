@@ -1,3 +1,6 @@
+// 2013136017 김성식, 2013136059 송재혁
+// TextFimeManager와 TextFileManager2는 상태값을 확인하려고 사용했습니다.
+
 package kr.ac.koreatech.swkang.msp16adcstepmonitor;
 
 import android.Manifest;
@@ -24,19 +27,19 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
+    //확인용 TextView
     private TextView rmsText;
     private TextView movingText;
-    private TextView logText;
-
     private TextView infoText;
+
+    // log찍는 텍스트 뷰
+    private TextView logText;
     private double rms;
 
-    //----
+    //텍스트뷰 설정
     private TextView mvtText;
     private TextView stepsText;
     private TextView topText;
-
-    //----
 
     // 화면에 띄울 현재 총 이동시간
     // 현재 총 스텝수
@@ -55,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
     final int MY_PERMISSIONS_REQUEST = 1;
     boolean isPermitted = false;
 
-
     // 파일 매니저 관련 설정
     TextFileManager mFileMgr; // 이동/정지 저장하는 애
     TextFileManager2 mTestMgr;
@@ -65,20 +67,25 @@ public class MainActivity extends AppCompatActivity {
     Timer timer = new Timer();
     TimerTask timerTask = null;
 
+    // textView의 값을 바꿀때 브로드캐스트리시버활용
     private BroadcastReceiver MyStepReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            /*
             if(intent.getAction().equals("kr.ac.koreatech.msp.adcstepmonitor.rms")) {
                 rms = intent.getDoubleExtra("rms", 0.0);
-                rmsText.setText("rms: " + rms);
+                //rmsText.setText("rms: " + rms);
             } else if(intent.getAction().equals("kr.ac.koreatech.msp.adcstepmonitor.moving")) {
+
                 boolean moving = intent.getBooleanExtra("moving", false);
                 if(moving) {
                     movingText.setText("Moving");
                 } else {
                     movingText.setText("NOT Moving");
                 }
-            } else if(intent.getAction().equals("koreatech.totalStep")) {
+            }
+            else */
+            if(intent.getAction().equals("koreatech.totalStep")) {
                 totalStep = intent.getIntExtra("TOTAL_STEP", 0);
                 stepsText.setText( "Steps: "+ totalStep);
             } else if(intent.getAction().equals("koreatech.movingTime")) {
@@ -87,13 +94,13 @@ public class MainActivity extends AppCompatActivity {
             } else if(intent.getAction().equals("koreatech.topPlace")) {
                 topPlace = intent.getStringExtra("TOP_PLACE");
                 topText.setText( "Top Place: "+ topPlace);
-
             }
         }
     };
 
 
     public MainActivity() {
+
     }
 
     @Override
@@ -101,23 +108,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //mAccelX = (TextView)findViewById(R.id.accelX);
-        //mAccelY = (TextView)findViewById(R.id.accelY);
-        //mAccelZ = (TextView)findViewById(R.id.accelZ);
-
         requestRuntimePermission();
 
         mFileMgr = new TextFileManager();
         mTestMgr = new TextFileManager2();
 
-        rmsText = (TextView)findViewById(R.id.rms);
-        movingText = (TextView)findViewById(R.id.moving);
+        //rmsText = (TextView)findViewById(R.id.rms);
+        //movingText = (TextView)findViewById(R.id.moving);
         //
+        //infoText = (TextView)findViewById(R.id.info);
+
         logText = (TextView)findViewById(R.id.logView);
-        infoText = (TextView)findViewById(R.id.info);
+
 
         logText.setMovementMethod(new ScrollingMovementMethod());
-        infoText.setMovementMethod(new ScrollingMovementMethod());
+        //infoText.setMovementMethod(new ScrollingMovementMethod());
 
         //--
         mvtText = (TextView)findViewById(R.id.mvtTextView);
@@ -145,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         // timertask를 시작한다.
         logText.setText(mFileMgr.load());
-        infoText.setText(mTestMgr.load());
+        //infoText.setText(mTestMgr.load());
 
         startTimerTask();
     }
@@ -188,8 +193,8 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             String data = mFileMgr.load();
                             logText.setText(data);
-                            String data2 = mTestMgr.load();
-                            infoText.setText(data2);
+                            //String data2 = mTestMgr.load();
+                            //infoText.setText(data2);
 
                         }catch (NullPointerException e){
                         }
@@ -199,12 +204,8 @@ public class MainActivity extends AppCompatActivity {
         };
 
         // TimerTask를 Timer를 통해 실행시킨다
-        // 4초 후에 타이머를 구동하고 5초마다 반복한다
+        // 2초 후에 타이머를 구동하고 3초마다 반복한다
         timer.schedule(timerTask, 2000, 3000);
-        //*** Timer 클래스 메소드 이용법 참고 ***//
-        // 	schedule(TimerTask task, long delay, long period)
-        // http://developer.android.com/intl/ko/reference/java/util/Timer.html
-        //***********************************//
     }
 
     private void stopTimerTask() {
