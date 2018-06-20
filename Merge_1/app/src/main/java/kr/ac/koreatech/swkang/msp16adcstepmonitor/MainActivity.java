@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
                 mvtText.setText( "Moving time: "+ movingTime / 10 + "분");
             } else if(intent.getAction().equals("koreatech.topPlace")) {
                 topPlace = intent.getStringExtra("TOP_PLACE");
-                mvtText.setText( "Top Place: "+ topPlace);
+                topText.setText( "Top Place: "+ topPlace);
 
             }
         }
