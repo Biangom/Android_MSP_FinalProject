@@ -361,6 +361,8 @@ public class ADCMonitorService extends Service {
                 // ACQUIRE a wakelock here to collect and process accelerometer data
                 wakeLock.acquire();
 
+                allBroadcast();
+
                 accelMonitor = new StepMonitor(context);
                 accelMonitor.onStart();
 
@@ -530,7 +532,6 @@ public class ADCMonitorService extends Service {
                                 // 초기화
                                 top_accStay = placeList[i].accStay;
                                 top_location = placeList[i].name;
-                                createBroadcast("topPlace");
                             }
                         }
                     }
@@ -552,8 +553,6 @@ public class ADCMonitorService extends Service {
                 accStep += STEP_THIRTY; // 30초에 해당하는 걸음은 45걸음이다.
                 totalStep += STEP_THIRTY; // total도 증가해준다.
 
-                createBroadcast("movingTime"); // 브로드캐스트 보낸다.
-                createBroadcast("totalStep"); // 브로드캐스트 보낸다.
 
                 stateList.add(WALK); // WALK 저장
             }
@@ -565,9 +564,6 @@ public class ADCMonitorService extends Service {
                 movingTime += 10; // 총 movingTime도 1분 추가
                 accStep += STEP_SIXTY; // 60초에 해당하는 걸음은 90걸음이다.
                 totalStep += STEP_SIXTY; // 총 걸음수도 증가하여준다.
-
-                createBroadcast("movingTime"); // 브로드캐스트 보낸다.
-                createBroadcast("totalStep"); // 브로드캐스트 보낸다.
 
                 stateList.add(WALK); // WALK 저장
                 state = WALK; // 그리고 state를 WALK상태로 바꾼다. 1분이상 걸었으므로
@@ -649,16 +645,6 @@ public class ADCMonitorService extends Service {
             return;
         }
 
-        /*
-        if(isCheck == false ) {
-            am.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                    SystemClock.elapsedRealtime() + period - activeTime, pendingIntent);
-        }
-        else { // true이면 checking 에 진입했으므로 activetime을 2번빼준다.
-            am.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                    SystemClock.elapsedRealtime() + period - activeTime , pendingIntent);
-        }
-        */
         am.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP,
                 SystemClock.elapsedRealtime() + period - activeTime , pendingIntent);
     }
@@ -782,9 +768,7 @@ public class ADCMonitorService extends Service {
             wakeLock = null;
         }
 
-        createBroadcast("totalStep");
-        createBroadcast("movingTime");
-        createBroadcast("topPlace");
+        allBroadcast();
     }
 
     // 내가 만든 함수
@@ -810,8 +794,7 @@ public class ADCMonitorService extends Service {
         return mFormat.format(mDate);
     }
 
-    private void createBroadcast(String caseString) {
-
+    public void createBroadcast(String caseString) {
         if(caseString.equals("totalStep")){
             Intent intent = new Intent("koreatech.totalStep");
             intent.putExtra("TOTAL_STEP", totalStep);
@@ -829,7 +812,13 @@ public class ADCMonitorService extends Service {
             // broadcast 전송
             sendBroadcast(intent);
         }
-
-
     }
+
+    // 각종 정보를 모두 브로드캐스트한다.
+    public void allBroadcast() {
+        createBroadcast("totalStep");
+        createBroadcast("movingTime");
+        createBroadcast("topPlace");
+    }
+
 }
