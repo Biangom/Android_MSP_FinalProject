@@ -37,8 +37,13 @@ public class MainActivity extends AppCompatActivity {
     private TextView topText;
 
     //----
+
+    // 화면에 띄울 현재 총 이동시간
+    // 현재 총 스텝수
+    // 최고로 많이 머물렀던 장소 표시
     private int movingTime;
     private int totalStep;
+    String topPlace;
 
     // 날짜관련
     long mNow;  // time을 저장하는 변수
@@ -79,6 +84,10 @@ public class MainActivity extends AppCompatActivity {
             } else if(intent.getAction().equals("koreatech.movingTime")) {
                 movingTime = intent.getIntExtra("MOVING_TIME", 0);
                 mvtText.setText( "Moving time: "+ movingTime / 10 + "분");
+            } else if(intent.getAction().equals("koreatech.topPlace")) {
+                topPlace = intent.getStringExtra("TOP_PLACE");
+                mvtText.setText( "Top Place: "+ topPlace);
+
             }
         }
     };
@@ -121,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
         intentFilter.addAction("kr.ac.koreatech.msp.adcstepmonitor.moving");
         intentFilter.addAction("koreatech.totalStep");
         intentFilter.addAction("koreatech.movingTime");
+        intentFilter.addAction("koreatech.topPlace");
 
         // 날짜를 생성하여 제목을 초기화한다.
         ActionBar ab = getSupportActionBar();

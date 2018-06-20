@@ -147,6 +147,10 @@ public class ADCMonitorService extends Service {
     public static final int R4_das = 15;
     public static final int R5_das = 15;
 
+    // top place
+    public String top_location = "";
+    public int top_accStay = 0;
+
 
     // Wifi Scan Result Broadcast 를 수신하는 Receiver
     // 해당 Broadcast 수신하면 getWifiInfo() 호출
@@ -499,6 +503,16 @@ public class ADCMonitorService extends Service {
                     // 이전에 accStay을 저장해야한다.
                     tm.save(preDate + "~" + nowDate + " " + accStay / 10 + "분 " + "정지 ");
                     tm.save(msp_location + "\n");
+
+                    // 저장을 한 뒤 현재 accStay가 최고로 높았던 accStay보다 크다면
+                    // 그 top_accStay를 accStay로 초기화하고
+                    // location도 toplocation 으로 초기화하고
+                    // 브로드캐스트로 해당 이름을 전달한다.
+                    if(top_accStay < accStay) {
+                        top_accStay = accStay;
+                        top_location = new String(msp_location);
+                        createBroadcast("topPlace");
+                    }
                     state = UN;
                 }
                 // (. (5분미만) . X O 인 상태)
@@ -774,6 +788,11 @@ public class ADCMonitorService extends Service {
         }else if(caseString.equals("movingTime")) {
             Intent intent = new Intent("koreatech.movingTime");
             intent.putExtra("MOVING_TIME", movingTime);
+            // broadcast 전송
+            sendBroadcast(intent);
+        }else if(caseString.equals("topPlace")) {
+            Intent intent = new Intent("koreatech.topPlace");
+            intent.putExtra("TOP_PLACE", top_location);
             // broadcast 전송
             sendBroadcast(intent);
         }
