@@ -72,6 +72,12 @@ public class ADCMonitorService extends Service {
     // 현재 state를 판별해야돼는데 판별할 이전 moving상태(S)의 갯수
     // 30초마다 1번 검사하므로 10개의 sample이 필요 (5분이상 머물렀으면 현재 상태를 Stay로 바꾼다)
 
+    // 상수화
+    static final String CLASS = "401강의실";
+    static final String LIBRARY = "다산정보관";
+    static final String GROUND = "운동장";
+    static final String GRASS = "잔디광장";
+
     // 1분이상 걸었으면 WALK
     // 5분이상 쉬었으면 STAY
     // 둘 중 아무것도 아니면 UN
@@ -150,6 +156,9 @@ public class ADCMonitorService extends Service {
     // top place
     public String top_location = "";
     public int top_accStay = 0;
+
+    //-- place
+    placeInfo placeList[];
 
 
     // Wifi Scan Result Broadcast 를 수신하는 Receiver
@@ -252,11 +261,11 @@ public class ADCMonitorService extends Service {
         if(is_401 >= 3) {
             Log.d(LTAG, "if 401");
             tm.save("if 401\n");
-            msp_location = "401강의실";
+            msp_location = CLASS ;//"401강의실";
         } else if(is_dasan >= 3) {
             Log.d(LTAG, "if dasan");
             tm.save("if dasan\n");
-            msp_location = "다산정보관";
+            msp_location = LIBRARY;//"다산정보관";
         } else {
             Log.d(LTAG, "wifi unknown");
             tm.save("else 401\n");
@@ -301,9 +310,9 @@ public class ADCMonitorService extends Service {
             Location.distanceBetween(ground_lat, ground_lon, latitude, longitude, results_gr);
             Location.distanceBetween(square_lat, square_lon, latitude, longitude, results_sq);
             if(results_gr[0] < 80.0) {
-                msp_location = "운동장";
+                msp_location = GROUND;//"운동장";
             } else if(results_sq[0] < 50.0) {
-                msp_location = "잔디광장";
+                msp_location = GRASS;//"잔디광장";
             } else {
                 //msp_location = "Unknown";
                 Log.d(LTAG, "gpsUnknwon");
@@ -508,11 +517,24 @@ public class ADCMonitorService extends Service {
                     // 그 top_accStay를 accStay로 초기화하고
                     // location도 toplocation 으로 초기화하고
                     // 브로드캐스트로 해당 이름을 전달한다.
-                    if(top_accStay < accStay) {
-                        top_accStay = accStay;
-                        top_location = new String(msp_location);
-                        createBroadcast("topPlace");
+
+                    // 4개에 해당이 된다면
+                    for(int i = 0; i < 4; i++ ) {
+                        // 만약 리스트중에 같은 장소가 있다면
+                        if(placeList[i].name.equals(msp_location)) {
+                            // 해당하는 누적시간을 더한다
+                            placeList[i].accStay += accStay;
+
+                            // 만약 누적시간값이 여태 저장되었던 top누적시간보다 크다면
+                            if(placeList[i].accStay > top_accStay) {
+                                // 초기화
+                                top_accStay = placeList[i].accStay;
+                                top_location = placeList[i].name;
+                                createBroadcast("topPlace");
+                            }
+                        }
                     }
+
                     state = UN;
                 }
                 // (. (5분미만) . X O 인 상태)
@@ -663,24 +685,31 @@ public class ADCMonitorService extends Service {
         registerReceiver(AlarmReceiver, intentFilter);
 
         // AlarmManager 객체 얻기
-        am = (AlarmManager)getSystemService(ALARM_SERVICE);
+        am = (AlarmManager) getSystemService(ALARM_SERVICE);
 
         // 초기 날짜 설정
         preDate = getTime();
 
         //*****************************************
-        wifiManager = (WifiManager)getApplicationContext().getSystemService(WIFI_SERVICE);
-        locationManager = (LocationManager)getApplicationContext().getSystemService(LOCATION_SERVICE);
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        locationManager = (LocationManager) getApplicationContext().getSystemService(LOCATION_SERVICE);
         //*****************************************
 
         // SSSWWS파일 다지우고 시작.
         tm2.delete();
 
         // 초기 설정
-        if(stateList.size() == 0) {
+        if (stateList.size() == 0) {
             stateList.add(STAY);
             tm2.save("S");
         }
+
+        // place 객체리스트 생성s
+        placeList = new placeInfo[4];
+        placeList[0] = new placeInfo(CLASS,  0);
+        placeList[1] = new placeInfo(LIBRARY ,   0);
+        placeList[2] = new placeInfo(GROUND ,     0);
+        placeList[3] = new placeInfo(GRASS,    0);
     }
 
     @Override
@@ -752,6 +781,10 @@ public class ADCMonitorService extends Service {
             wakeLock.release();
             wakeLock = null;
         }
+
+        createBroadcast("totalStep");
+        createBroadcast("movingTime");
+        createBroadcast("topPlace");
     }
 
     // 내가 만든 함수
